@@ -1,0 +1,914 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouFiltre - Plateforme vidéo avec contenu modéré</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+    <style>
+        .video-card:hover {
+            transform: translateY(-5px);
+            transition: transform 0.3s ease;
+        }
+        .sidebar-item:hover {
+            background-color: rgba(229, 231, 235, 0.5);
+        }
+        .video-player-container {
+            aspect-ratio: 16 / 9;
+            background-color: black;
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+        .architecture-diagram {
+            background-image: radial-gradient(#f9fafb 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 font-sans">
+    <!-- Navigation -->
+    <header class="bg-white shadow-md fixed w-full top-0 z-50">
+        <div class="flex items-center justify-between px-4 py-2">
+            <!-- Logo & Burger Menu -->
+            <div class="flex items-center">
+                <button class="p-2 mr-2 rounded-full hover:bg-gray-200">
+                    <i class="fas fa-bars text-gray-700"></i>
+                </button>
+                <div class="flex items-center">
+                    <span class="text-red-600 font-bold text-2xl">You</span><span class="text-blue-600 font-bold text-2xl">Filtre</span>
+                    <span class="text-xs bg-blue-100 text-blue-800 px-1 rounded ml-1">Sécurisé</span>
+                </div>
+            </div>
+            
+            <!-- Search Bar -->
+            <div class="hidden md:flex items-center flex-1 max-w-2xl mx-4">
+                <div class="relative w-full">
+                    <input type="text" placeholder="Rechercher une vidéo des chaînes approuvées" 
+                        class="w-full px-4 py-2 border border-gray-300 rounded-l-full focus:outline-none focus:border-blue-500">
+                    <button class="absolute right-0 top-0 h-full px-5 bg-gray-100 rounded-r-full border border-l-0 border-gray-300">
+                        <i class="fas fa-search text-gray-600"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Right Menu -->
+            <div class="flex items-center space-x-3">
+                <button class="p-2 rounded-full hover:bg-gray-200 md:inline-block hidden">
+                    <i class="fas fa-video text-gray-700"></i>
+                </button>
+                <button class="p-2 rounded-full hover:bg-gray-200 md:inline-block hidden">
+                    <i class="fas fa-bell text-gray-700"></i>
+                </button>
+                <button class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
+                    <i class="fas fa-user-circle mr-1"></i>
+                    Connexion
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <div class="flex pt-14">
+        <!-- Sidebar -->
+        <aside class="fixed left-0 h-full bg-white w-64 shadow-md hidden lg:block custom-scrollbar overflow-y-auto z-40">
+            <div class="py-4">
+                <div class="px-4 py-2 font-medium text-lg border-b border-gray-200">Navigation</div>
+                
+                <div class="mt-2">
+                    <a href="#" class="flex items-center px-4 py-2 text-gray-800 sidebar-item">
+                        <i class="fas fa-home mr-4 text-gray-600"></i>
+                        Accueil
+                    </a>
+                    <a href="#" class="flex items-center px-4 py-2 text-gray-800 sidebar-item">
+                        <i class="fas fa-fire mr-4 text-gray-600"></i>
+                        Tendances
+                    </a>
+                    <a href="#" class="flex items-center px-4 py-2 text-gray-800 sidebar-item">
+                        <i class="fas fa-check-circle mr-4 text-blue-600"></i>
+                        Chaînes approuvées
+                    </a>
+                    <a href="#" class="flex items-center px-4 py-2 text-gray-800 sidebar-item">
+                        <i class="fas fa-history mr-4 text-gray-600"></i>
+                        Historique
+                    </a>
+                </div>
+                
+                <div class="px-4 py-2 mt-4 font-medium text-lg border-b border-gray-200">Abonnements approuvés</div>
+                
+                <div class="mt-2">
+                    <a href="#" class="flex items-center px-4 py-2 text-gray-800 sidebar-item">
+                        <div class="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center text-white mr-4">E</div>
+                        Éducation Positive
+                    </a>
+                    <a href="#" class="flex items-center px-4 py-2 text-gray-800 sidebar-item">
+                        <div class="w-6 h-6 bg-purple-500 rounded-full flex items-center justify-center text-white mr-4">S</div>
+                        Science Éthique
+                    </a>
+                    <a href="#" class="flex items-center px-4 py-2 text-gray-800 sidebar-item">
+                        <div class="w-6 h-6 bg-yellow-500 rounded-full flex items-center justify-center text-white mr-4">V</div>
+                        Valeurs & Société
+                    </a>
+                    <a href="#" class="flex items-center px-4 py-2 text-gray-800 sidebar-item">
+                        <div class="w-6 h-6 bg-red-500 rounded-full flex items-center justify-center text-white mr-4">H</div>
+                        Histoire Inspirante
+                    </a>
+                </div>
+                
+                <div class="px-4 py-2 mt-4 font-medium text-lg border-b border-gray-200">Plus d'options</div>
+                
+                <div class="mt-2">
+                    <a href="#" class="flex items-center px-4 py-2 text-gray-800 sidebar-item">
+                        <i class="fas fa-cog mr-4 text-gray-600"></i>
+                        Paramètres
+                    </a>
+                    <a href="#" class="flex items-center px-4 py-2 text-gray-800 sidebar-item">
+                        <i class="fas fa-question-circle mr-4 text-gray-600"></i>
+                        Aide
+                    </a>
+                    <a href="#" class="flex items-center px-4 py-2 text-gray-800 sidebar-item">
+                        <i class="fas fa-flag mr-4 text-gray-600"></i>
+                        Signaler un contenu
+                    </a>
+                    <a href="#section-architecture" class="flex items-center px-4 py-2 text-blue-600 sidebar-item">
+                        <i class="fas fa-code mr-4"></i>
+                        Architecture technique
+                    </a>
+                </div>
+            </div>
+        </aside>
+        
+        <!-- Mobile Sidebar Toggle Button -->
+        <div class="fixed bottom-5 left-5 z-50 lg:hidden">
+            <button id="mobile-sidebar-toggle" class="bg-white p-3 rounded-full shadow-lg">
+                <i class="fas fa-bars text-gray-700"></i>
+            </button>
+        </div>
+        
+        <!-- Mobile Sidebar (Hidden by default) -->
+        <div id="mobile-sidebar" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden lg:hidden">
+            <div class="absolute left-0 top-0 h-full w-64 bg-white shadow-md transform -translate-x-full transition-transform duration-300 ease-in-out" id="mobile-sidebar-content">
+                <!-- Mobile sidebar content here (duplicate of desktop sidebar) -->
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <main class="flex-1 min-h-screen ml-0 lg:ml-64 p-6">
+            <!-- Platform Intro -->
+            <section class="bg-white p-6 rounded-lg shadow-md mb-8">
+                <h1 class="text-2xl font-bold mb-4">Bienvenue sur YouFiltre</h1>
+                <p class="text-gray-700 mb-4">
+                    Profitez d'une expérience similaire à YouTube, mais avec un contenu soigneusement sélectionné qui respecte des valeurs morales spécifiques.
+                </p>
+                <div class="flex space-x-4">
+                    <button class="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700">
+                        <i class="fas fa-sign-in-alt mr-2"></i>Créer un compte
+                    </button>
+                    <button class="bg-gray-200 text-gray-800 px-6 py-2 rounded-md hover:bg-gray-300">
+                        <i class="fas fa-info-circle mr-2"></i>En savoir plus
+                    </button>
+                </div>
+            </section>
+            
+            <!-- Video Grid -->
+            <h2 class="text-xl font-semibold mb-4">Vidéos recommandées</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-10">
+                <!-- Video Card 1 -->
+                <div class="bg-white rounded-lg shadow-md overflow-hidden video-card transition-all">
+                    <div class="video-player-container">
+                        <video poster="https://via.placeholder.com/640x360.png?text=Vid%C3%A9o+Approuv%C3%A9e" class="w-full h-full object-cover">
+                            <source src="#" type="video/mp4">
+                        </video>
+                    </div>
+                    <div class="p-3">
+                        <div class="flex">
+                            <div class="w-9 h-9 rounded-full bg-gray-300 mr-3"></div>
+                            <div>
+                                <h3 class="font-medium text-gray-900 line-clamp-2">L'importance de l'éthique dans les nouvelles technologies</h3>
+                                <p class="text-gray-600 text-sm mt-1">Science Éthique</p>
+                                <p class="text-gray-500 text-xs mt-1">125K vues • il y a 2 jours</p>
+                            </div>
+                        </div>
+                        <div class="mt-2 flex justify-end">
+                            <span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">Approuvé</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Video Card 2 -->
+                <div class="bg-white rounded-lg shadow-md overflow-hidden video-card transition-all">
+                    <div class="video-player-container">
+                        <video poster="https://via.placeholder.com/640x360.png?text=Histoire+Inspir%C3%A9e" class="w-full h-full object-cover">
+                            <source src="#" type="video/mp4">
+                        </video>
+                    </div>
+                    <div class="p-3">
+                        <div class="flex">
+                            <div class="w-9 h-9 rounded-full bg-red-300 mr-3"></div>
+                            <div>
+                                <h3 class="font-medium text-gray-900 line-clamp-2">Histoire inspirante: Comment ces jeunes ont aidé leur communauté</h3>
+                                <p class="text-gray-600 text-sm mt-1">Histoire Inspirante</p>
+                                <p class="text-gray-500 text-xs mt-1">83K vues • il y a 5 jours</p>
+                            </div>
+                        </div>
+                        <div class="mt-2 flex justify-end">
+                            <span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">Approuvé</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Video Card 3 -->
+                <div class="bg-white rounded-lg shadow-md overflow-hidden video-card transition-all">
+                    <div class="video-player-container">
+                        <video poster="https://via.placeholder.com/640x360.png?text=Valeurs+%26+Soci%C3%A9t%C3%A9" class="w-full h-full object-cover">
+                            <source src="#" type="video/mp4">
+                        </video>
+                    </div>
+                    <div class="p-3">
+                        <div class="flex">
+                            <div class="w-9 h-9 rounded-full bg-yellow-300 mr-3"></div>
+                            <div>
+                                <h3 class="font-medium text-gray-900 line-clamp-2">Apprendre le respect des autres cultures: un guide</h3>
+                                <p class="text-gray-600 text-sm mt-1">Valeurs & Société</p>
+                                <p class="text-gray-500 text-xs mt-1">57K vues • il y a 1 semaine</p>
+                            </div>
+                        </div>
+                        <div class="mt-2 flex justify-end">
+                            <span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">Approuvé</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Video Card 4 -->
+                <div class="bg-white rounded-lg shadow-md overflow-hidden video-card transition-all">
+                    <div class="video-player-container">
+                        <video poster="https://via.placeholder.com/640x360.png?text=%C3%89ducation+Positive" class="w-full h-full object-cover">
+                            <source src="#" type="video/mp4">
+                        </video>
+                    </div>
+                    <div class="p-3">
+                        <div class="flex">
+                            <div class="w-9 h-9 rounded-full bg-green-300 mr-3"></div>
+                            <div>
+                                <h3 class="font-medium text-gray-900 line-clamp-2">Méthodes d'éducation positive pour les enfants de tous âges</h3>
+                                <p class="text-gray-600 text-sm mt-1">Éducation Positive</p>
+                                <p class="text-gray-500 text-xs mt-1">92K vues • il y a 3 jours</p>
+                            </div>
+                        </div>
+                        <div class="mt-2 flex justify-end">
+                            <span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">Approuvé</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Content Filter Section -->
+            <section class="bg-white p-6 rounded-lg shadow-md mb-8">
+                <h2 class="text-xl font-semibold mb-4">Comment fonctionne notre filtrage de contenu</h2>
+                <div class="flex flex-col lg:flex-row gap-6">
+                    <div class="flex-1">
+                        <div class="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                            <h3 class="text-lg font-medium mb-2 text-blue-700"><i class="fas fa-shield-alt mr-2"></i>Chaînes approuvées</h3>
+                            <p class="text-gray-700 mb-3">
+                                Notre plateforme n'affiche que les vidéos provenant de chaînes YouTube spécifiquement approuvées par notre équipe de modération.
+                            </p>
+                            <div class="flex items-center bg-blue-50 p-3 rounded-lg border border-blue-100">
+                                <i class="fas fa-check-circle text-green-600 text-xl mr-3"></i>
+                                <p class="text-sm text-gray-800">Un administrateur examine et approuve chaque chaîne avant son ajout à notre liste</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex-1">
+                        <div class="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                            <h3 class="text-lg font-medium mb-2 text-blue-700"><i class="fas fa-user-shield mr-2"></i>Contrôle des commentaires</h3>
+                            <p class="text-gray-700 mb-3">
+                                Les commentaires sont exclusifs à notre plateforme et ne sont pas synchronisés avec YouTube. Ils sont soumis à modération.
+                            </p>
+                            <div class="flex items-center bg-blue-50 p-3 rounded-lg border border-blue-100">
+                                <i class="fas fa-comment-slash text-red-600 text-xl mr-3"></i>
+                                <p class="text-sm text-gray-800">Les commentaires inappropriés sont automatiquement filtrés et peuvent être signalés</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Video Watch Demo -->
+            <h2 class="text-xl font-semibold mb-4">Lecture de vidéo</h2>
+            <div class="bg-white p-6 rounded-lg shadow-md mb-10">
+                <div class="flex flex-col lg:flex-row gap-6">
+                    <div class="lg:w-2/3">
+                        <div class="video-player-container rounded-lg overflow-hidden">
+                            <video controls playsinline webkit-playsinline poster="https://via.placeholder.com/1280x720.png?text=Lecture+de+Vid%C3%A9o+Approuv%C3%A9e" class="w-full h-full object-cover">
+                                <source src="#" type="video/mp4">
+                            </video>
+                        </div>
+                        <div class="mt-4">
+                            <h3 class="text-xl font-semibold">Comprendre les valeurs familiales à travers les cultures</h3>
+                            <div class="flex justify-between items-center mt-2">
+                                <p class="text-gray-600">203K vues • 14 jan 2024</p>
+                                <div class="flex space-x-4">
+                                    <button class="flex items-center text-gray-700">
+                                        <i class="fas fa-thumbs-up mr-1"></i>
+                                        <span>15K</span>
+                                    </button>
+                                    <button class="flex items-center text-gray-700">
+                                        <i class="fas fa-thumbs-down mr-1"></i>
+                                        <span>125</span>
+                                    </button>
+                                    <button class="flex items-center text-gray-700">
+                                        <i class="fas fa-share mr-1"></i>
+                                        <span>Partager</span>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="flex items-center mt-4 pb-4 border-b border-gray-200">
+                                <div class="w-12 h-12 rounded-full bg-purple-400 mr-3"></div>
+                                <div>
+                                    <h4 class="font-medium">Valeurs & Société</h4>
+                                    <p class="text-gray-600 text-sm">1.2M d'abonnés</p>
+                                </div>
+                                <button class="ml-auto bg-red-600 text-white px-4 py-2 rounded-md">S'abonner</button>
+                            </div>
+                            <div class="mt-4">
+                                <h4 class="font-medium mb-2">Description:</h4>
+                                <p class="text-gray-700">
+                                    Cette vidéo explore les différentes façons dont les valeurs familiales sont exprimées à travers les cultures du monde entier. Nous examinerons les similitudes et les différences, tout en soulignant l'importance du respect et de la compréhension interculturelle.
+                                </p>
+                            </div>
+                        </div>
+                        
+                        <!-- Comments Section -->
+                        <div class="mt-6">
+                            <h4 class="font-medium mb-4">156 commentaires</h4>
+                            <div class="flex mb-4">
+                                <div class="w-10 h-10 rounded-full bg-blue-300 mr-3"></div>
+                                <div class="flex-1">
+                                    <input type="text" placeholder="Ajouter un commentaire..." class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                </div>
+                            </div>
+                            
+                            <!-- Comment 1 -->
+                            <div class="flex mt-4 pb-4 border-b border-gray-100">
+                                <div class="w-10 h-10 rounded-full bg-green-300 mr-3"></div>
+                                <div>
+                                    <div class="flex items-center">
+                                        <h5 class="font-medium">Marie D.</h5>
+                                        <span class="text-gray-500 text-sm ml-2">il y a 3 jours</span>
+                                    </div>
+                                    <p class="text-gray-800 mt-1">
+                                        J'ai beaucoup appris sur les différentes expressions des valeurs familiales. Merci pour ce contenu enrichissant !
+                                    </p>
+                                    <div class="flex items-center mt-2 text-gray-600 text-sm">
+                                        <button class="flex items-center mr-4">
+                                            <i class="fas fa-thumbs-up mr-1"></i>
+                                            <span>42</span>
+                                        </button>
+                                        <button class="flex items-center mr-4">
+                                            <i class="fas fa-thumbs-down mr-1"></i>
+                                        </button>
+                                        <button>Répondre</button>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Comment 2 -->
+                            <div class="flex mt-4 pb-4 border-b border-gray-100">
+                                <div class="w-10 h-10 rounded-full bg-yellow-300 mr-3"></div>
+                                <div>
+                                    <div class="flex items-center">
+                                        <h5 class="font-medium">Thomas B.</h5>
+                                        <span class="text-gray-500 text-sm ml-2">il y a 5 jours</span>
+                                    </div>
+                                    <p class="text-gray-800 mt-1">
+                                        Cette plateforme est géniale ! Je peux enfin regarder des vidéos sans craindre de tomber sur du contenu inapproprié. Merci pour cette initiative.
+                                    </p>
+                                    <div class="flex items-center mt-2 text-gray-600 text-sm">
+                                        <button class="flex items-center mr-4">
+                                            <i class="fas fa-thumbs-up mr-1"></i>
+                                            <span>78</span>
+                                        </button>
+                                        <button class="flex items-center mr-4">
+                                            <i class="fas fa-thumbs-down mr-1"></i>
+                                        </button>
+                                        <button>Répondre</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Related Videos -->
+                    <div class="lg:w-1/3">
+                        <h4 class="font-medium mb-3">Vidéos recommandées</h4>
+                        
+                        <!-- Related Video 1 -->
+                        <div class="flex mb-3 group">
+                            <div class="w-40 h-20 bg-gray-200 rounded-lg mr-2 flex-shrink-0 overflow-hidden">
+                                <img src="https://via.placeholder.com/640x360.png?text=Vid%C3%A9o+Connexe" alt="Miniature vidéo" class="w-full h-full object-cover">
+                            </div>
+                            <div>
+                                <h5 class="text-sm font-medium text-gray-900 line-clamp-2 group-hover:text-blue-600">Comment inculquer des valeurs positives aux enfants</h5>
+                                <p class="text-xs text-gray-600 mt-1">Éducation Positive</p>
+                                <p class="text-xs text-gray-500">86K vues • il y a 2 semaines</p>
+                            </div>
+                        </div>
+                        
+                        <!-- Related Video 2 -->
+                        <div class="flex mb-3 group">
+                            <div class="w-40 h-20 bg-gray-200 rounded-lg mr-2 flex-shrink-0 overflow-hidden">
+                                <img src="https://via.placeholder.com/640x360.png?text=Vid%C3%A9o+Connexe" alt="Miniature vidéo" class="w-full h-full object-cover">
+                            </div>
+                            <div>
+                                <h5 class="text-sm font-medium text-gray-900 line-clamp-2 group-hover:text-blue-600">Les traditions familiales à travers le monde</h5>
+                                <p class="text-xs text-gray-600 mt-1">Valeurs & Société</p>
+                                <p class="text-xs text-gray-500">135K vues • il y a 1 mois</p>
+                            </div>
+                        </div>
+                        
+                        <!-- Related Video 3 -->
+                        <div class="flex mb-3 group">
+                            <div class="w-40 h-20 bg-gray-200 rounded-lg mr-2 flex-shrink-0 overflow-hidden">
+                                <img src="https://via.placeholder.com/640x360.png?text=Vid%C3%A9o+Connexe" alt="Miniature vidéo" class="w-full h-full object-cover">
+                            </div>
+                            <div>
+                                <h5 class="text-sm font-medium text-gray-900 line-clamp-2 group-hover:text-blue-600">L'impact des valeurs familiales sur la société moderne</h5>
+                                <p class="text-xs text-gray-600 mt-1">Science Éthique</p>
+                                <p class="text-xs text-gray-500">67K vues • il y a 3 semaines</p>
+                            </div>
+                        </div>
+                        
+                        <!-- Related Video 4 -->
+                        <div class="flex mb-3 group">
+                            <div class="w-40 h-20 bg-gray-200 rounded-lg mr-2 flex-shrink-0 overflow-hidden">
+                                <img src="https://via.placeholder.com/640x360.png?text=Vid%C3%A9o+Connexe" alt="Miniature vidéo" class="w-full h-full object-cover">
+                            </div>
+                            <div>
+                                <h5 class="text-sm font-medium text-gray-900 line-clamp-2 group-hover:text-blue-600">Comment cette famille a créé une communauté solidaire</h5>
+                                <p class="text-xs text-gray-600 mt-1">Histoire Inspirante</p>
+                                <p class="text-xs text-gray-500">112K vues • il y a 2 mois</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Channel Suggestion -->
+            <section class="bg-blue-50 p-6 rounded-lg shadow-md mb-10 border border-blue-200">
+                <h2 class="text-xl font-semibold mb-4 text-blue-800">Suggérer une chaîne à ajouter</h2>
+                <p class="text-gray-700 mb-4">
+                    Vous connaissez une chaîne YouTube de qualité qui correspond à nos valeurs ? Proposez-la pour qu'elle soit évaluée par notre équipe de modération.
+                </p>
+                <form class="mt-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label class="block text-gray-700 text-sm font-medium mb-2" for="channel-name">
+                                Nom de la chaîne
+                            </label>
+                            <input type="text" id="channel-name" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Nom de la chaîne YouTube">
+                        </div>
+                        <div>
+                            <label class="block text-gray-700 text-sm font-medium mb-2" for="channel-url">
+                                URL de la chaîne
+                            </label>
+                            <input type="text" id="channel-url" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="https://youtube.com/channel/...">
+                        </div>
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-gray-700 text-sm font-medium mb-2" for="channel-reason">
+                            Pourquoi cette chaîne devrait-elle être ajoutée ?
+                        </label>
+                        <textarea id="channel-reason" rows="3" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Expliquez pourquoi cette chaîne correspond à nos valeurs..."></textarea>
+                    </div>
+                    <div class="flex justify-end">
+                        <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700">
+                            <i class="fas fa-paper-plane mr-2"></i>Soumettre la suggestion
+                        </button>
+                    </div>
+                </form>
+            </section>
+            
+            <!-- Admin Dashboard Preview -->
+            <h2 class="text-xl font-semibold mb-4">Tableau de bord administrateur (aperçu)</h2>
+            <section class="bg-white p-6 rounded-lg shadow-md mb-10">
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="text-lg font-medium">Gestion des chaînes et du contenu</h3>
+                    <div class="flex space-x-2">
+                        <button class="bg-green-600 text-white px-4 py-2 rounded-md text-sm">
+                            <i class="fas fa-plus mr-1"></i>Ajouter une chaîne
+                        </button>
+                        <button class="bg-blue-600 text-white px-4 py-2 rounded-md text-sm">
+                            <i class="fas fa-sync-alt mr-1"></i>Synchroniser
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Chaîne
+                                </th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Catégorie
+                                </th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Videos
+                                </th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Statut
+                                </th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Actions
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            <tr>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="flex items-center">
+                                        <div class="flex-shrink-0 h-10 w-10 rounded-full bg-green-300"></div>
+                                        <div class="ml-4">
+                                            <div class="text-sm font-medium text-gray-900">Éducation Positive</div>
+                                            <div class="text-sm text-gray-500">education-positive</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                        Éducation
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    127
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                        Actif
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                    <a href="#" class="text-blue-600 hover:text-blue-900 mr-3">Éditer</a>
+                                    <a href="#" class="text-red-600 hover:text-red-900">Suspendre</a>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="flex items-center">
+                                        <div class="flex-shrink-0 h-10 w-10 rounded-full bg-purple-300"></div>
+                                        <div class="ml-4">
+                                            <div class="text-sm font-medium text-gray-900">Science Éthique</div>
+                                            <div class="text-sm text-gray-500">science-ethique</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-purple-100 text-purple-800">
+                                        Science
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    89
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                        Actif
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                    <a href="#" class="text-blue-600 hover:text-blue-900 mr-3">Éditer</a>
+                                    <a href="#" class="text-red-600 hover:text-red-900">Suspendre</a>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="flex items-center">
+                                        <div class="flex-shrink-0 h-10 w-10 rounded-full bg-yellow-300"></div>
+                                        <div class="ml-4">
+                                            <div class="text-sm font-medium text-gray-900">Valeurs & Société</div>
+                                            <div class="text-sm text-gray-500">valeurs-societe</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                                        Société
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    112
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                        Actif
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                    <a href="#" class="text-blue-600 hover:text-blue-900 mr-3">Éditer</a>
+                                    <a href="#" class="text-red-600 hover:text-red-900">Suspendre</a>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="mt-6">
+                    <h3 class="text-lg font-medium mb-4">Suggestions en attente d'approbation</h3>
+                    <div class="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                        <div class="flex items-center justify-between mb-3">
+                            <div>
+                                <h4 class="font-medium">Philosophie pour tous</h4>
+                                <p class="text-sm text-gray-600">Suggérée par: user123@example.com</p>
+                            </div>
+                            <div class="flex space-x-2">
+                                <button class="bg-green-600 text-white px-3 py-1 rounded-md text-sm">
+                                    <i class="fas fa-check mr-1"></i>Approuver
+                                </button>
+                                <button class="bg-red-600 text-white px-3 py-1 rounded-md text-sm">
+                                    <i class="fas fa-times mr-1"></i>Rejeter
+                                </button>
+                            </div>
+                        </div>
+                        <p class="text-sm text-gray-700">
+                            "Cette chaîne propose des explications accessibles sur la philosophie et l'éthique, adaptées à tous les âges. Le contenu est éducatif et constructif."
+                        </p>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Technical Architecture Section -->
+            <h2 id="section-architecture" class="text-xl font-semibold mb-4">Architecture technique</h2>
+            <section class="bg-white p-6 rounded-lg shadow-md mb-10">
+                <div class="architecture-diagram p-4 rounded-lg mb-6">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <!-- Frontend -->
+                        <div class="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                            <h3 class="text-lg font-medium text-blue-800 mb-3">Frontend (React/Vue.js)</h3>
+                            <ul class="space-y-2">
+                                <li class="flex items-start">
+                                    <i class="fas fa-code text-blue-600 mt-1 mr-2"></i>
+                                    <span class="text-gray-700">Interface utilisateur identique à YouTube</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <i class="fas fa-palette text-blue-600 mt-1 mr-2"></i>
+                                    <span class="text-gray-700">Composants UI réutilisables (cartes vidéo, sidebars, etc.)</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <i class="fas fa-user-circle text-blue-600 mt-1 mr-2"></i>
+                                    <span class="text-gray-700">Authentification via Firebase ou Auth0</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <i class="fas fa-play-circle text-blue-600 mt-1 mr-2"></i>
+                                    <span class="text-gray-700">Lecture vidéo via l'API iframe YouTube</span>
+                                </li>
+                            </ul>
+                        </div>
+                        
+                        <!-- Backend -->
+                        <div class="bg-green-50 p-4 rounded-lg border border-green-200">
+                            <h3 class="text-lg font-medium text-green-800 mb-3">Backend (Node.js)</h3>
+                            <ul class="space-y-2">
+                                <li class="flex items-start">
+                                    <i class="fas fa-server text-green-600 mt-1 mr-2"></i>
+                                    <span class="text-gray-700">API RESTful avec Express</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <i class="fas fa-shield-alt text-green-600 mt-1 mr-2"></i>
+                                    <span class="text-gray-700">Gestion des utilisateurs et authentification</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <i class="fas fa-youtube text-green-600 mt-1 mr-2"></i>
+                                    <span class="text-gray-700">Intégration avec l'API YouTube</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <i class="fas fa-filter text-green-600 mt-1 mr-2"></i>
+                                    <span class="text-gray-700">Filtrage des chaînes et contenu</span>
+                                </li>
+                            </ul>
+                        </div>
+                        
+                        <!-- Database -->
+                        <div class="bg-purple-50 p-4 rounded-lg border border-purple-200">
+                            <h3 class="text-lg font-medium text-purple-800 mb-3">Base de données</h3>
+                            <ul class="space-y-2">
+                                <li class="flex items-start">
+                                    <i class="fas fa-database text-purple-600 mt-1 mr-2"></i>
+                                    <span class="text-gray-700">MongoDB ou PostgreSQL</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <i class="fas fa-check-double text-purple-600 mt-1 mr-2"></i>
+                                    <span class="text-gray-700">Liste des chaînes approuvées</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <i class="fas fa-comments text-purple-600 mt-1 mr-2"></i>
+                                    <span class="text-gray-700">Stockage des commentaires propres à la plateforme</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <i class="fas fa-heart text-purple-600 mt-1 mr-2"></i>
+                                    <span class="text-gray-700">Gestion des likes et engagement utilisateur</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <!-- Data Flow Diagram -->
+                    <div class="mt-6">
+                        <h3 class="text-lg font-medium mb-3">Flux de données</h3>
+                        <div class="overflow-hidden">
+                            <div class="flex flex-col items-center">
+                                <div class="flex space-x-3 mb-3">
+                                    <div class="bg-blue-100 text-blue-800 px-3 py-1 rounded-lg">Client</div>
+                                    <div class="flex items-center text-gray-500">
+                                        <i class="fas fa-arrow-right"></i>
+                                    </div>
+                                    <div class="bg-green-100 text-green-800 px-3 py-1 rounded-lg">Serveur</div>
+                                    <div class="flex items-center text-gray-500">
+                                        <i class="fas fa-arrow-right"></i>
+                                    </div>
+                                    <div class="bg-red-100 text-red-800 px-3 py-1 rounded-lg">API YouTube</div>
+                                    <div class="flex items-center text-gray-500">
+                                        <i class="fas fa-arrow-right"></i>
+                                    </div>
+                                    <div class="bg-purple-100 text-purple-800 px-3 py-1 rounded-lg">DB</div>
+                                </div>
+                                <div class="w-full bg-gray-100 p-3 rounded-lg text-sm text-gray-700">
+                                    1. L'utilisateur demande des vidéos <br>
+                                    2. Le serveur vérifie la liste des chaînes approuvées dans la base de données<br>
+                                    3. Le serveur demande les vidéos à l'API YouTube uniquement pour ces chaînes<br>
+                                    4. L'API YouTube renvoie les données filtrées<br>
+                                    5. Le serveur traite et renvoie uniquement le contenu approuvé au client
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Considerations -->
+                <div class="mt-6">
+                    <h3 class="text-lg font-medium mb-3">Considérations importantes</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
+                            <h4 class="font-medium text-yellow-800 mb-2">Limitations de l'API YouTube</h4>
+                            <ul class="text-sm text-gray-700 space-y-1">
+                                <li class="flex items-start">
+                                    <i class="fas fa-exclamation-circle text-yellow-600 mt-1 mr-2"></i>
+                                    <span>Quota journalier de 10 000 unités par défaut</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <i class="fas fa-exclamation-circle text-yellow-600 mt-1 mr-2"></i>
+                                    <span>Certaines requêtes coûtent plus d'unités (recherche: 100 unités)</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <i class="fas fa-exclamation-circle text-yellow-600 mt-1 mr-2"></i>
+                                    <span>Nécessité d'optimiser et mettre en cache les requêtes</span>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="bg-red-50 p-4 rounded-lg border border-red-200">
+                            <h4 class="font-medium text-red-800 mb-2">Conformité légale</h4>
+                            <ul class="text-sm text-gray-700 space-y-1">
+                                <li class="flex items-start">
+                                    <i class="fas fa-gavel text-red-600 mt-1 mr-2"></i>
+                                    <span>Respect des conditions d'utilisation de l'API YouTube</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <i class="fas fa-gavel text-red-600 mt-1 mr-2"></i>
+                                    <span>Attribution claire à YouTube comme source du contenu</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <i class="fas fa-gavel text-red-600 mt-1 mr-2"></i>
+                                    <span>Ne pas modifier les statistiques officielles de YouTube</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Implementation Steps -->
+                <div class="mt-6">
+                    <h3 class="text-lg font-medium mb-3">Étapes d'implémentation</h3>
+                    <ol class="space-y-2 text-gray-700">
+                        <li class="flex items-start">
+                            <div class="bg-blue-200 text-blue-800 rounded-full w-6 h-6 flex items-center justify-center mr-2 mt-0.5 flex-shrink-0">1</div>
+                            <div>
+                                <p class="font-medium">Conception de la base de données</p>
+                                <p class="text-sm text-gray-600">Modélisation des tables pour chaînes approuvées, utilisateurs, commentaires, likes</p>
+                            </div>
+                        </li>
+                        <li class="flex items-start">
+                            <div class="bg-blue-200 text-blue-800 rounded-full w-6 h-6 flex items-center justify-center mr-2 mt-0.5 flex-shrink-0">2</div>
+                            <div>
+                                <p class="font-medium">Développement du backend Node.js avec Express</p>
+                                <p class="text-sm text-gray-600">API pour authentification, gestion des chaînes, proxy pour l'API YouTube</p>
+                            </div>
+                        </li>
+                        <li class="flex items-start">
+                            <div class="bg-blue-200 text-blue-800 rounded-full w-6 h-6 flex items-center justify-center mr-2 mt-0.5 flex-shrink-0">3</div>
+                            <div>
+                                <p class="font-medium">Développement frontend avec React ou Vue.js</p>
+                                <p class="text-sm text-gray-600">Interface utilisateur similaire à YouTube, lecture vidéo, commentaires</p>
+                            </div>
+                        </li>
+                        <li class="flex items-start">
+                            <div class="bg-blue-200 text-blue-800 rounded-full w-6 h-6 flex items-center justify-center mr-2 mt-0.5 flex-shrink-0">4</div>
+                            <div>
+                                <p class="font-medium">Intégration et tests</p>
+                                <p class="text-sm text-gray-600">Tests de l'intégration entre le frontend, le backend et l'API YouTube</p>
+                            </div>
+                        </li>
+                        <li class="flex items-start">
+                            <div class="bg-blue-200 text-blue-800 rounded-full w-6 h-6 flex items-center justify-center mr-2 mt-0.5 flex-shrink-0">5</div>
+                            <div>
+                                <p class="font-medium">Déploiement</p>
+                                <p class="text-sm text-gray-600">Mise en production sur une plateforme comme Heroku, AWS ou Google Cloud</p>
+                            </div>
+                        </li>
+                    </ol>
+                </div>
+            </section>
+        </main>
+    </div>
+    
+    <!-- Footer -->
+    <footer class="bg-white shadow-md py-6 mt-10">
+        <div class="container mx-auto px-6">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <div class="mb-4 md:mb-0">
+                    <div class="flex items-center">
+                        <span class="text-red-600 font-bold text-xl">You</span><span class="text-blue-600 font-bold text-xl">Filtre</span>
+                    </div>
+                    <p class="text-gray-600 text-sm mt-1">
+                        Vidéos approuvées pour un contenu respectueux des valeurs
+                    </p>
+                </div>
+                <div class="flex flex-wrap justify-center gap-4">
+                    <a href="#" class="text-gray-700 hover:text-blue-600">À propos</a>
+                    <a href="#" class="text-gray-700 hover:text-blue-600">Confidentialité</a>
+                    <a href="#" class="text-gray-700 hover:text-blue-600">Conditions d'utilisation</a>
+                    <a href="#" class="text-gray-700 hover:text-blue-600">Contact</a>
+                </div>
+            </div>
+            <div class="mt-6 text-center text-gray-500 text-sm">
+                <p>Cette plateforme utilise l'API YouTube mais n'est pas affiliée à YouTube ou Google Inc.</p>
+                <p class="mt-1">© 2024 YouFiltre - Tous droits réservés</p>
+            </div>
+        </div>
+    </footer>
+    
+    <script>
+        // Mobile sidebar functionality
+        document.getElementById('mobile-sidebar-toggle').addEventListener('click', function() {
+            const sidebar = document.getElementById('mobile-sidebar');
+            const sidebarContent = document.getElementById('mobile-sidebar-content');
+            
+            sidebar.classList.toggle('hidden');
+            
+            if (!sidebar.classList.contains('hidden')) {
+                setTimeout(() => {
+                    sidebarContent.style.transform = 'translateX(0)';
+                }, 50);
+            } else {
+                sidebarContent.style.transform = 'translateX(-100%)';
+            }
+        });
+        
+        document.getElementById('mobile-sidebar').addEventListener('click', function(e) {
+            if (e.target === this) {
+                this.classList.add('hidden');
+                document.getElementById('mobile-sidebar-content').style.transform = 'translateX(-100%)';
+            }
+        });
+        
+        // Clone sidebar content for mobile
+        const sidebarContent = document.querySelector('aside').innerHTML;
+        document.getElementById('mobile-sidebar-content').innerHTML = sidebarContent;
+        
+        // Smooth scroll to architecture section
+        document.querySelectorAll('a[href="#section-architecture"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                
+                document.querySelector(this.getAttribute('href')).scrollIntoView({
+                    behavior: 'smooth'
+                });
+                
+                // Close mobile sidebar if open
+                document.getElementById('mobile-sidebar').classList.add('hidden');
+                document.getElementById('mobile-sidebar-content').style.transform = 'translateX(-100%)';
+            });
+        });
+    </script>
+</body>
+</html>
