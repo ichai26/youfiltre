@@ -1,0 +1,405 @@
+# Generate an updated Snake HTML with:
+# - Wrap-around edges
+# - Bonus item every 3 foods eaten (worth multiple points, disappears after a short time)
+from pathlib import Path
+
+html = r"""<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Snake — Wrap + Bonus</title>
+<style>
+  :root{
+    --bg:#0b0f19;
+    --ink:#e5e7eb;
+    --soft:#94a3b8;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0;
+    font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Helvetica,Arial,"Apple Color Emoji","Segoe UI Emoji";
+    color:var(--ink);
+    background:
+      radial-gradient(1200px 600px at 0% 0%, rgba(59,130,246,.18), transparent 60%),
+      radial-gradient(900px 900px at 100% 100%, rgba(167,139,250,.16), transparent 60%),
+      #0a0a0a;
+  }
+  .wrap{max-width:1060px;margin:0 auto;padding:16px;display:grid;gap:16px}
+  @media(min-width:980px){.wrap{grid-template-columns: 1fr 310px}}
+  .card{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:18px;box-shadow:0 14px 36px rgba(0,0,0,.35);backdrop-filter: blur(8px);}
+  .header{display:flex;flex-wrap:wrap;align-items:end;justify-content:space-between;gap:10px;padding:10px 6px 0 6px}
+  h1{font-size:22px;margin:0}
+  .subtitle{color:var(--soft);font-size:13px;margin:4px 0 0 0}
+  .controls{display:flex;flex-wrap:wrap;gap:8px}
+  select,.btn{appearance:none;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);color:var(--ink);padding:8px 12px;border-radius:12px;cursor:pointer}
+  .btn{display:inline-flex;align-items:center;gap:8px;text-decoration:none}
+  .btn:active{transform:translateY(1px)}
+  .layout{display:grid;gap:14px}
+  .board-card{padding:12px}
+  .side-card{padding:14px}
+  .canvas{display:block;width:100%;border-radius:16px;background:#0b1e39;box-shadow: inset 0 0 0 6px rgba(255,255,255,.05);}
+  .statusbar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:12px}
+  .badges{display:flex;flex-wrap:wrap;gap:8px}
+  .badge{background:rgba(0,0,0,.25);border:1px solid rgba(255,255,255,.14);padding:6px 10px;border-radius:999px;font-size:13px}
+  .dpad{margin:14px auto 6px;max-width:280px;display:grid;grid-template-columns:repeat(3,1fr);gap:10px;user-select:none}
+  .dbtn{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.16);color:#e2e8f0;border-radius:14px;padding:14px;cursor:pointer}
+  .dbtn:active{transform:translateY(1px)}
+  .mid{display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.04);border:1px dashed rgba(255,255,255,.18);border-radius:14px;color:#9ca3af}
+  .hint{color:#cbd5e1;font-size:12px;text-align:center;margin:8px 0 0 0}
+  .side-title{font-weight:600;margin:0 0 8px 0;font-size:16px;display:flex;align-items:center;gap:8px}
+  .side-list{font-size:14px;color:#e5e7eb;line-height:1.5}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="layout">
+      <div class="header">
+        <div>
+          <h1>Snake — Wrap + Bonus</h1>
+          <p class="subtitle">Bords traversants + bonus toutes les 3 nourritures (multi‑points, disparaît).</p>
+        </div>
+        <div class="controls">
+          <select id="speed" title="Vitesse">
+            <option value="180">Lent</option>
+            <option value="120" selected>Normal</option>
+            <option value="85">Rapide</option>
+            <option value="60">Fou</option>
+          </select>
+          <select id="food" title="Nourriture">
+            <option>⭐️</option><option>🍇</option><option>🍎</option><option>🍯</option>
+            <option>🍊</option><option>🥯</option><option>📜</option><option>🕯️</option>
+          </select>
+          <button id="sound" class="btn" title="Activer/Couper le son">🔊 Son</button>
+        </div>
+      </div>
+
+      <div class="card board-card">
+        <canvas id="board" class="canvas"></canvas>
+
+        <div class="statusbar">
+          <div class="badges">
+            <span class="badge">Score : <strong id="score">0</strong></span>
+            <span class="badge">Record : <strong id="high">0</strong></span>
+            <span class="badge" id="state">Prêt</span>
+            <span class="badge" id="bonusFlag" style="display:none">Bonus actif</span>
+          </div>
+          <div class="controls">
+            <button id="start" class="btn">▶️ Démarrer</button>
+            <button id="pause" class="btn">⏸️ Pause</button>
+            <button id="reset" class="btn">🔁 Réinitialiser</button>
+          </div>
+        </div>
+
+        <div class="dpad">
+          <div></div>
+          <button class="dbtn" id="u" aria-label="Haut">↑</button>
+          <div></div>
+          <button class="dbtn" id="l" aria-label="Gauche">←</button>
+          <div class="mid" id="mid">Prêt</div>
+          <button class="dbtn" id="r" aria-label="Droite">→</button>
+          <div></div>
+          <button class="dbtn" id="d" aria-label="Bas">↓</button>
+          <div></div>
+        </div>
+        <p class="hint">Astuce : flèches ou WASD • Espace = pause</p>
+      </div>
+    </div>
+
+    <aside class="card side-card">
+      <h3 class="side-title">⚙️ Règles</h3>
+      <div class="side-list">
+        <p><strong>Bords traversants :</strong> sortir d’un côté te fait réapparaître de l’autre.</p>
+        <p><strong>Bonus :</strong> toutes les 3 nourritures mangées, un bonus 💎 apparaît pour quelques secondes. S’il est mangé à temps, il rapporte plusieurs points.</p>
+      </div>
+    </aside>
+  </div>
+
+<script>
+// ====== Paramètres ======
+const GRID = 20;
+const THEME = {
+  boardBg:"#0b1e39",
+  snake:"#f5d76e",
+  head:"#ffeaa7",
+  grid:"rgba(255,255,255,0.08)",
+  frame:"#1f3a67",
+};
+let SPEED = 120;
+
+const BONUS_POINTS = 5;           // points gagnés en mangeant le bonus
+const BONUS_TTL_MS  = 7000;       // durée d'apparition du bonus (ms)
+const BONUS_EMOJI   = "💎";       // rendu du bonus
+
+// ====== État ======
+let boardPx=520, cell=26, pad=10;
+let snake, dir, nextDir, food, running=false, over=false, timer=null;
+let score=0, high=Number(localStorage.getItem("snakeHighWrapBonus")||0);
+let soundOn=true, foodEmoji="⭐️";
+let foodsEaten=0;                 // nombre de nourritures standard mangées
+let bonus=null;                   // {x,y,expiresAt}
+
+// ====== DOM ======
+const cv = document.getElementById("board");
+const ctx = cv.getContext("2d");
+const elScore = document.getElementById("score");
+const elHigh = document.getElementById("high");
+const elState = document.getElementById("state");
+const elMid = document.getElementById("mid");
+const elBonusFlag = document.getElementById("bonusFlag");
+
+// ====== Audio minimal ======
+let audioCtx=null;
+function ensureAudio(){
+  if(!soundOn) return null;
+  if(!audioCtx){
+    const Ctx = window.AudioContext || window.webkitAudioContext;
+    if(!Ctx) return null;
+    audioCtx = new Ctx();
+  }
+  if(audioCtx.state==="suspended") audioCtx.resume();
+  return audioCtx;
+}
+function beep(fs, dur=90){
+  if(!soundOn) return;
+  const ctxA = ensureAudio(); if(!ctxA) return;
+  const now = ctxA.currentTime;
+  fs.forEach((f,i)=>{
+    const o = ctxA.createOscillator();
+    const g = ctxA.createGain();
+    o.type="sine"; o.frequency.value=f;
+    o.connect(g); g.connect(ctxA.destination);
+    const t0 = now + i*(dur+20)/1000;
+    const t1 = t0 + dur/1000;
+    g.gain.setValueAtTime(0.0001, t0);
+    g.gain.exponentialRampToValueAtTime(0.35, t0+0.01);
+    g.gain.exponentialRampToValueAtTime(0.0001, t1);
+    o.start(t0); o.stop(t1+0.02);
+  });
+}
+const sEat   = ()=>beep([440,660,880],70);
+const sOver  = ()=>beep([440,240],160);
+const sStart = ()=>beep([392,523,659],80);
+const sBonus = ()=>beep([784,988,1319],70);
+
+// ====== Utilitaires ======
+function resizeBoard(){
+  const w = cv.parentElement.clientWidth;
+  boardPx = Math.max(300, Math.min(560, Math.floor(w-8)));
+  cv.width = boardPx; cv.height = boardPx;
+  cell = Math.floor(boardPx / GRID);
+  pad = Math.floor((boardPx - GRID*cell)/2);
+  drawAll();
+}
+new ResizeObserver(resizeBoard).observe(cv.parentElement);
+
+function newGame(){
+  snake = [{x:9,y:10},{x:8,y:10}];
+  dir = {x:1,y:0};
+  nextDir = null;
+  food = placeFood(snake);
+  score=0; over=false; running=false;
+  foodsEaten=0; bonus=null;
+  updateHUD(); drawAll();
+}
+function start(){
+  if(over) return;
+  if(running) return;
+  running=true;
+  clearInterval(timer);
+  timer = setInterval(tick, SPEED);
+  sStart();
+  updateHUD();
+}
+function pause(){
+  if(!running) return;
+  running=false;
+  clearInterval(timer);
+  updateHUD();
+}
+function reset(){
+  running=false; clearInterval(timer);
+  newGame();
+}
+function updateHUD(){
+  elScore.textContent = score;
+  elHigh.textContent = high;
+  elState.textContent = over ? "Fin de partie" : (running ? "En cours" : "Prêt");
+  elMid.textContent = running ? "OK" : (over ? "💥" : "Prêt");
+  elBonusFlag.style.display = (bonus && performance.now() < bonus.expiresAt) ? "" : "none";
+}
+
+function placeFood(occupied){
+  while(true){
+    const p = {x:Math.floor(Math.random()*GRID), y:Math.floor(Math.random()*GRID)};
+    if(!occupied.some(o=>o.x===p.x && o.y===p.y) && (!bonus || p.x!==bonus.x || p.y!==bonus.y)) return p;
+  }
+}
+function placeBonus(occupied){
+  // place bonus hors serpent et nourriture
+  while(true){
+    const p = {x:Math.floor(Math.random()*GRID), y:Math.floor(Math.random()*GRID)};
+    const onSnake = occupied.some(o=>o.x===p.x && o.y===p.y);
+    const onFood = (p.x===food.x && p.y===food.y);
+    if(!onSnake && !onFood){
+      return {x:p.x, y:p.y, expiresAt: performance.now() + BONUS_TTL_MS};
+    }
+  }
+}
+function requestDir(x,y){
+  if(dir.x===-x && dir.y===-y) return; // pas de demi-tour instantané
+  nextDir = {x,y};
+}
+
+// ====== Boucle ======
+function tick(){
+  // wrap-around: calcule la prochaine position avec modulo
+  const move = nextDir ? nextDir : dir;
+  nextDir = null;
+  const head = snake[0];
+  let nx = head.x + move.x;
+  let ny = head.y + move.y;
+  // wrap
+  nx = (nx + GRID) % GRID;
+  ny = (ny + GRID) % GRID;
+
+  // auto-collision (après wrap)
+  if(snake.some(p=>p.x===nx && p.y===ny)){ return gameOver(); }
+
+  const nextHead = {x:nx, y:ny};
+  const ateFood = (nx===food.x && ny===food.y);
+  const ateBonus = bonus && nx===bonus.x && ny===bonus.y && performance.now() < bonus.expiresAt;
+
+  const grown = [nextHead, ...snake];
+  if(!ateFood && !ateBonus) grown.pop();
+
+  if(ateFood){
+    score += 1;
+    foodsEaten += 1;
+    food = placeFood(grown);
+    sEat();
+    // toutes les 3 nourritures, on fait apparaître un bonus s'il n'y en a pas déjà un actif
+    if(foodsEaten % 3 === 0 && (!bonus || performance.now() >= bonus.expiresAt)){
+      bonus = placeBonus(grown);
+    }
+  }
+
+  if(ateBonus){
+    score += BONUS_POINTS;
+    bonus = null;
+    sBonus();
+  }
+
+  if(score>high){ high=score; localStorage.setItem("snakeHighWrapBonus", String(high)); }
+
+  dir = move; snake = grown;
+  drawAll(); updateHUD();
+}
+
+function gameOver(){
+  running=false; over=true; clearInterval(timer);
+  sOver(); drawAll(); updateHUD();
+}
+
+// ====== Rendu ======
+function rr(x,y,w,h,r){
+  const rr=Math.min(r,w/2,h/2);
+  ctx.beginPath();
+  ctx.moveTo(x+rr,y);
+  ctx.arcTo(x+w,y,x+w,y+h,rr);
+  ctx.arcTo(x+w,y+h,x,y+h,rr);
+  ctx.arcTo(x,y+h,x,y,rr);
+  ctx.arcTo(x,y,x+w,y,rr);
+  ctx.closePath();
+}
+function drawEmoji(emoji,cx,cy,size){
+  ctx.save();
+  ctx.font = size+"px system-ui, Apple Color Emoji, Segoe UI Emoji, Noto Color Emoji";
+  ctx.textAlign="center"; ctx.textBaseline="middle";
+  ctx.fillText(emoji, cx, cy);
+  ctx.restore();
+}
+function drawAll(){
+  // nettoyer bonus expiré
+  if(bonus && performance.now() >= bonus.expiresAt){ bonus=null; }
+
+  // fond
+  ctx.fillStyle = THEME.boardBg; ctx.fillRect(0,0,cv.width,cv.height);
+  // cadre
+  ctx.strokeStyle = THEME.frame; ctx.lineWidth=8;
+  rr(6,6,cv.width-12, cv.height-12, 22); ctx.stroke();
+  // grille
+  ctx.strokeStyle = THEME.grid; ctx.lineWidth=1;
+  for(let i=0;i<=GRID;i++){
+    const p = pad + i*cell;
+    ctx.beginPath(); ctx.moveTo(pad,p); ctx.lineTo(pad+GRID*cell, p); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(p, pad); ctx.lineTo(p, pad+GRID*cell); ctx.stroke();
+  }
+  // nourriture standard
+  drawEmoji(foodEmoji, pad + food.x*cell + cell/2, pad + food.y*cell + cell/2, Math.floor(cell*0.8));
+
+  // bonus (clignote sur la fin)
+  if(bonus){
+    const timeLeft = bonus.expiresAt - performance.now();
+    let alpha = 1;
+    if(timeLeft < 1500){ alpha = 0.3 + 0.7*Math.abs(Math.sin(performance.now()/120)); }
+    ctx.save(); ctx.globalAlpha = Math.max(0, Math.min(1, alpha));
+    drawEmoji(BONUS_EMOJI, pad + bonus.x*cell + cell/2, pad + bonus.y*cell + cell/2, Math.floor(cell*0.85));
+    ctx.restore();
+  }
+
+  // serpent
+  for(let i=0;i<snake.length;i++){
+    const s = snake[i];
+    const x = pad + s.x*cell, y = pad + s.y*cell;
+    const r = Math.floor(cell*0.25);
+    ctx.fillStyle = (i===0 ? THEME.head : THEME.snake);
+    rr(x+1,y+1,cell-2,cell-2,r); ctx.fill();
+    if(i===0){
+      ctx.globalAlpha=.14; ctx.fillStyle="#fff";
+      ctx.beginPath(); ctx.arc(x+cell*.75, y+cell*.28, cell*.15, 0, Math.PI*2); ctx.fill();
+      ctx.globalAlpha=1;
+    }
+  }
+}
+
+// ====== Événements ======
+document.getElementById("u").onclick=()=>requestDir(0,-1);
+document.getElementById("d").onclick=()=>requestDir(0, 1);
+document.getElementById("l").onclick=()=>requestDir(-1,0);
+document.getElementById("r").onclick=()=>requestDir(1, 0);
+document.getElementById("start").onclick=()=>start();
+document.getElementById("pause").onclick=()=>pause();
+document.getElementById("reset").onclick=()=>reset();
+document.getElementById("speed").onchange=(e)=>{
+  SPEED = parseInt(e.target.value,10);
+  if(running){ clearInterval(timer); timer = setInterval(tick, SPEED); }
+};
+document.getElementById("food").onchange=(e)=>{
+  foodEmoji = e.target.value; drawAll();
+};
+document.getElementById("sound").onclick=(e)=>{
+  soundOn = !soundOn;
+  e.target.textContent = soundOn ? "🔊 Son" : "🔇 Son";
+};
+document.addEventListener("keydown", (e)=>{
+  const k = e.key.toLowerCase();
+  if(["arrowup","w"].includes(k)) requestDir(0,-1);
+  else if(["arrowdown","s"].includes(k)) requestDir(0, 1);
+  else if(["arrowleft","a"].includes(k)) requestDir(-1,0);
+  else if(["arrowright","d"].includes(k)) requestDir(1, 0);
+  else if(k === " "){ running?pause():start(); }
+});
+
+// ====== Lancement ======
+function boot(){ resizeBoard(); newGame(); }
+window.addEventListener("load", boot);
+</script>
+</body>
+</html>
+"""
+
+p = Path("/mnt/data/snake_wrap_bonus.html")
+p.write_text(html, encoding="utf-8")
+p.as_posix()
