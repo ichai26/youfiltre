@@ -1,0 +1,1054 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>YouFiltre — Expérience YouTube filtrée</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" />
+  <style>
+    .video-card:hover { transform: translateY(-5px); transition: transform 0.2s ease; }
+    .sidebar-item:hover { background-color: rgba(229, 231, 235, 0.5); }
+    .video-player-container { aspect-ratio: 16 / 9; background-color: #000; }
+    .custom-scrollbar::-webkit-scrollbar { width: 8px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #888; border-radius: 4px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #555; }
+    .architecture-diagram { background-image: radial-gradient(#f9fafb 1px, transparent 1px); background-size: 20px 20px; }
+    .link { cursor: pointer; }
+    .badge { @apply text-xs px-2 py-0.5 rounded-full; }
+  </style>
+</head>
+<body class="bg-gray-100 font-sans">
+  <!-- Navigation -->
+  <header class="bg-white shadow-md fixed w-full top-0 z-50">
+    <div class="flex items-center justify-between px-4 py-2 max-w-7xl mx-auto">
+      <!-- Logo & Burger Menu -->
+      <div class="flex items-center">
+        <button id="btn-burger" class="p-2 mr-2 rounded-full hover:bg-gray-200" aria-label="Ouvrir le menu">
+          <i class="fas fa-bars text-gray-700"></i>
+        </button>
+        <a href="#/home" class="flex items-center link" aria-label="Aller à l'accueil">
+          <span class="text-red-600 font-bold text-2xl">You</span><span class="text-blue-600 font-bold text-2xl">Filtre</span>
+          <span class="text-xs bg-blue-100 text-blue-800 px-1 rounded ml-1">Sécurisé</span>
+        </a>
+      </div>
+
+      <!-- Search Bar -->
+      <div class="hidden md:flex items-center flex-1 max-w-2xl mx-4">
+        <form id="search-form" class="relative w-full">
+          <label class="sr-only" for="search-input">Rechercher</label>
+          <input id="search-input" type="search" placeholder="Rechercher dans les chaînes approuvées" class="w-full px-4 py-2 border border-gray-300 rounded-l-full focus:outline-none focus:border-blue-500" />
+          <button type="submit" class="absolute right-0 top-0 h-full px-5 bg-gray-100 rounded-r-full border border-l-0 border-gray-300" aria-label="Rechercher">
+            <i class="fas fa-search text-gray-600"></i>
+          </button>
+        </form>
+      </div>
+
+      <!-- Right Menu -->
+      <div class="flex items-center space-x-3">
+        <button id="btn-upload" class="p-2 rounded-full hover:bg-gray-200 md:inline-block hidden" title="Importer">
+          <i class="fas fa-video text-gray-700"></i>
+        </button>
+        <button id="btn-bell" class="p-2 rounded-full hover:bg-gray-200 md:inline-block hidden" title="Notifications">
+          <i class="fas fa-bell text-gray-700"></i>
+        </button>
+        <a href="#/login" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
+          <i class="fas fa-user-circle mr-1"></i>
+          <span class="js-login-label">Connexion</span>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <div class="flex pt-14">
+    <!-- Sidebar -->
+    <aside class="fixed left-0 h-full bg-white w-64 shadow-md hidden lg:block custom-scrollbar overflow-y-auto z-40">
+      <div class="py-4">
+        <div class="px-4 py-2 font-medium text-lg border-b border-gray-200">Navigation</div>
+        <nav class="mt-2">
+          <a href="#/home" class="flex items-center px-4 py-2 text-gray-800 sidebar-item"><i class="fas fa-home mr-4 text-gray-600"></i> Accueil</a>
+          <a href="#/trending" class="flex items-center px-4 py-2 text-gray-800 sidebar-item"><i class="fas fa-fire mr-4 text-gray-600"></i> Tendances</a>
+          <a href="#/subscriptions" class="flex items-center px-4 py-2 text-gray-800 sidebar-item"><i class="fas fa-star mr-4 text-gray-600"></i> Abonnements</a>
+          <a href="#/approved" class="flex items-center px-4 py-2 text-gray-800 sidebar-item"><i class="fas fa-check-circle mr-4 text-blue-600"></i> Chaînes approuvées</a>
+          <a href="#/history" class="flex items-center px-4 py-2 text-gray-800 sidebar-item"><i class="fas fa-history mr-4 text-gray-600"></i> Historique</a>
+          <a href="#/playlists" class="flex items-center px-4 py-2 text-gray-800 sidebar-item"><i class="fas fa-list mr-4 text-gray-600"></i> Playlists</a>
+          <a href="#/admin" class="flex items-center px-4 py-2 text-gray-800 sidebar-item"><i class="fas fa-shield-halved mr-4 text-gray-600"></i> Admin</a>
+        </nav>
+
+        <div class="px-4 py-2 mt-4 font-medium text-lg border-b border-gray-200">Abonnements approuvés</div>
+        <div id="sidebar-subs" class="mt-2"></div>
+
+        <div class="px-4 py-2 mt-4 font-medium text-lg border-b border-gray-200">Plus d'options</div>
+        <div class="mt-2">
+          <a href="#/settings" class="flex items-center px-4 py-2 text-gray-800 sidebar-item"><i class="fas fa-cog mr-4 text-gray-600"></i> Paramètres</a>
+          <a href="#/help" class="flex items-center px-4 py-2 text-gray-800 sidebar-item"><i class="fas fa-question-circle mr-4 text-gray-600"></i> Aide</a>
+          <a href="#/report" class="flex items-center px-4 py-2 text-gray-800 sidebar-item"><i class="fas fa-flag mr-4 text-gray-600"></i> Signaler un contenu</a>
+          <a href="#/about" class="flex items-center px-4 py-2 text-gray-800 sidebar-item"><i class="fas fa-circle-info mr-4 text-gray-600"></i> À propos</a>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Mobile Sidebar Toggle Button -->
+    <div class="fixed bottom-5 left-5 z-50 lg:hidden">
+      <button id="mobile-sidebar-toggle" class="bg-white p-3 rounded-full shadow-lg" aria-controls="mobile-sidebar" aria-expanded="false">
+        <i class="fas fa-bars text-gray-700"></i>
+      </button>
+    </div>
+
+    <!-- Mobile Sidebar (Hidden by default) -->
+    <div id="mobile-sidebar" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden lg:hidden" aria-hidden="true">
+      <div class="absolute left-0 top-0 h-full w-64 bg-white shadow-md transform -translate-x-full transition-transform duration-300 ease-in-out" id="mobile-sidebar-content"></div>
+    </div>
+
+    <!-- Main Content -->
+    <main id="app" class="flex-1 min-h-screen ml-0 lg:ml-64 p-6 max-w-7xl mx-auto"></main>
+  </div>
+
+  <!-- Footer -->
+  <footer class="bg-white shadow-md py-6 mt-10">
+    <div class="container mx-auto px-6">
+      <div class="flex flex-col md:flex-row justify-between items-center">
+        <div class="mb-4 md:mb-0">
+          <a href="#/home" class="flex items-center link"><span class="text-red-600 font-bold text-xl">You</span><span class="text-blue-600 font-bold text-xl">Filtre</span></a>
+          <p class="text-gray-600 text-sm mt-1">Vidéos approuvées pour un contenu respectueux des valeurs</p>
+        </div>
+        <div class="flex flex-wrap justify-center gap-4">
+          <a href="#/privacy" class="text-gray-700 hover:text-blue-600">Confidentialité</a>
+          <a href="#/terms" class="text-gray-700 hover:text-blue-600">Conditions</a>
+          <a href="#/contact" class="text-gray-700 hover:text-blue-600">Contact</a>
+        </div>
+      </div>
+      <div class="mt-6 text-center text-gray-500 text-sm">
+        <p>Cette plateforme utilise l'API YouTube mais n'est pas affiliée à YouTube ou Google Inc.</p>
+        <p class="mt-1">© <span id="year"></span> YouFiltre - Tous droits réservés</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Templates -->
+  <template id="tpl-home">
+    <section class="bg-white p-6 rounded-lg shadow-md mb-8">
+      <h1 class="text-2xl font-bold mb-4">Bienvenue sur YouFiltre</h1>
+      <p class="text-gray-700 mb-4">Une expérience type YouTube, avec contenu filtré depuis des chaînes approuvées.</p>
+      <div class="flex flex-wrap gap-3">
+        <a href="#/signup" class="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 link"><i class="fas fa-user-plus mr-2"></i>Créer un compte</a>
+        <a href="#/about" class="bg-gray-200 text-gray-800 px-6 py-2 rounded-md hover:bg-gray-300 link"><i class="fas fa-info-circle mr-2"></i>En savoir plus</a>
+        <a href="#/suggest" class="bg-purple-600 text-white px-6 py-2 rounded-md hover:bg-purple-700 link"><i class="fas fa-paper-plane mr-2"></i>Suggérer une chaîne</a>
+      </div>
+    </section>
+
+    <h2 class="text-xl font-semibold mb-4">Vidéos recommandées</h2>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-10" id="grid-videos"></div>
+  </template>
+
+  <template id="tpl-watch">
+    <div class="bg-white p-6 rounded-lg shadow-md mb-10">
+      <div class="flex flex-col lg:flex-row gap-6">
+        <div class="lg:w-2/3">
+          <div class="video-player-container rounded-lg overflow-hidden">
+            <video controls playsinline webkit-playsinline class="w-full h-full object-cover js-video"></video>
+          </div>
+          <div class="mt-4">
+            <h1 class="text-xl font-semibold js-title">Titre</h1>
+            <div class="flex flex-wrap gap-3 justify-between items-center mt-2">
+              <p class="text-gray-600 js-meta">—</p>
+              <div class="flex gap-3 items-center">
+                <span title="Vues officielles YouTube" class="text-sm bg-gray-100 px-2 py-1 rounded js-yt-views">—</span>
+                <button class="flex items-center text-gray-700 js-like"><i class="fas fa-thumbs-up mr-1"></i><span class="js-like-count">0</span></button>
+                <button class="flex items-center text-gray-700 js-dislike"><i class="fas fa-thumbs-down mr-1"></i><span class="js-dislike-count">0</span></button>
+                <button class="flex items-center text-gray-700 js-share"><i class="fas fa-share mr-1"></i><span>Partager</span></button>
+              </div>
+            </div>
+            <div class="flex items-center mt-4 pb-4 border-b border-gray-200">
+              <div class="w-12 h-12 rounded-full bg-purple-400 mr-3"></div>
+              <div>
+                <h4 class="font-medium js-channel">Chaîne</h4>
+                <p class="text-gray-600 text-sm js-subs">— abonnés</p>
+              </div>
+              <button class="ml-auto bg-red-600 text-white px-4 py-2 rounded-md js-subscribe">S'abonner</button>
+            </div>
+            <div class="mt-4">
+              <h4 class="font-medium mb-2">Description</h4>
+              <p class="text-gray-700 js-desc"></p>
+            </div>
+          </div>
+
+          <div class="mt-6">
+            <h4 class="font-medium mb-4 js-comments-count">0 commentaire</h4>
+            <div class="flex mb-4">
+              <div class="w-10 h-10 rounded-full bg-blue-300 mr-3"></div>
+              <div class="flex-1">
+                <form id="comment-form" class="flex gap-2">
+                  <input required name="comment" type="text" placeholder="Ajouter un commentaire..." class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                  <button type="submit" class="px-4 py-2 rounded-md bg-blue-600 text-white">Envoyer</button>
+                </form>
+                <p class="text-xs text-gray-500 mt-1">Les nouveaux commentaires passent en modération avant affichage public.</p>
+              </div>
+            </div>
+            <div class="space-y-4 js-comments"></div>
+          </div>
+        </div>
+
+        <aside class="lg:w-1/3">
+          <h4 class="font-medium mb-3">Vidéos recommandées</h4>
+          <div class="space-y-3 js-related"></div>
+        </aside>
+      </div>
+    </div>
+  </template>
+
+  <template id="tpl-auth">
+    <section class="max-w-md mx-auto bg-white p-6 rounded-lg shadow-md">
+      <h1 class="text-2xl font-bold mb-4">Connexion</h1>
+      <form id="login-form" class="space-y-3">
+        <div>
+          <label class="text-sm text-gray-700">Email</label>
+          <input name="email" type="email" required class="w-full px-3 py-2 border rounded" placeholder="vous@exemple.com" />
+        </div>
+        <div>
+          <label class="text-sm text-gray-700">Mot de passe</label>
+          <input name="password" type="password" required class="w-full px-3 py-2 border rounded" placeholder="••••••••" />
+        </div>
+        <div class="flex items-center justify-between">
+          <label class="inline-flex items-center text-sm"><input type="checkbox" name="remember" class="mr-2">Se souvenir</label>
+          <a href="#/signup" class="text-sm text-blue-600">Créer un compte</a>
+        </div>
+        <button class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded">Se connecter</button>
+      </form>
+      <p class="text-xs text-gray-500 mt-3">Admin démo : <code>admin@youfiltre.test</code> / <code>admin123</code></p>
+    </section>
+  </template>
+
+  <template id="tpl-signup">
+    <section class="max-w-md mx-auto bg-white p-6 rounded-lg shadow-md">
+      <h1 class="text-2xl font-bold mb-4">Créer un compte</h1>
+      <form id="signup-form" class="space-y-3">
+        <div>
+          <label class="text-sm text-gray-700">Nom</label>
+          <input name="name" required class="w-full px-3 py-2 border rounded" />
+        </div>
+        <div>
+          <label class="text-sm text-gray-700">Email</label>
+          <input name="email" type="email" required class="w-full px-3 py-2 border rounded" />
+        </div>
+        <div>
+          <label class="text-sm text-gray-700">Mot de passe</label>
+          <input name="password" type="password" required class="w-full px-3 py-2 border rounded" />
+        </div>
+        <button class="w-full bg-green-600 hover:bg-green-700 text-white py-2 rounded">Créer mon compte</button>
+      </form>
+    </section>
+  </template>
+
+  <template id="tpl-suggest">
+    <section class="max-w-2xl mx-auto bg-white p-6 rounded-lg shadow-md">
+      <h1 class="text-2xl font-bold mb-4">Suggérer une chaîne YouTube</h1>
+      <form id="suggest-form" class="space-y-3">
+        <div>
+          <label class="text-sm text-gray-700">Nom de la chaîne</label>
+          <input name="name" required class="w-full px-3 py-2 border rounded" />
+        </div>
+        <div>
+          <label class="text-sm text-gray-700">URL ou ID de chaîne</label>
+          <input name="url" required class="w-full px-3 py-2 border rounded" placeholder="https://youtube.com/@... ou UCxxxxxxxx" />
+        </div>
+        <div>
+          <label class="text-sm text-gray-700">Pourquoi ?</label>
+          <textarea name="reason" required class="w-full px-3 py-2 border rounded"></textarea>
+        </div>
+        <button class="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded">Soumettre</button>
+      </form>
+      <p class="text-sm text-gray-500 mt-3">Votre suggestion est envoyée à la modération.</p>
+    </section>
+  </template>
+
+  <template id="tpl-admin">
+    <section class="bg-white p-4 rounded-lg shadow-md">
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <h1 class="text-2xl font-bold">Tableau de bord Admin</h1>
+        <div>
+          <span class="text-sm bg-gray-100 px-2 py-1 rounded mr-2">Connecté : <span class="js-admin-name">—</span></span>
+          <button id="admin-logout" class="px-3 py-1 rounded bg-gray-200">Déconnexion</button>
+        </div>
+      </div>
+
+      <div class="mt-4 grid grid-cols-1 md:grid-cols-4 gap-3">
+        <a href="#/admin/channels" class="p-4 rounded border hover:shadow group">
+          <div class="flex items-center justify-between">
+            <h3 class="font-semibold">Chaînes</h3>
+            <i class="fa-solid fa-tv text-gray-500 group-hover:text-blue-600"></i>
+          </div>
+          <p class="text-sm text-gray-600">Gérer approuvées / en attente / refusées</p>
+        </a>
+        <a href="#/admin/suggestions" class="p-4 rounded border hover:shadow group">
+          <div class="flex items-center justify-between">
+            <h3 class="font-semibold">Suggestions</h3>
+            <i class="fa-solid fa-lightbulb text-gray-500 group-hover:text-yellow-500"></i>
+          </div>
+          <p class="text-sm text-gray-600">Valider les propositions de chaînes</p>
+        </a>
+        <a href="#/admin/moderation" class="p-4 rounded border hover:shadow group">
+          <div class="flex items-center justify-between">
+            <h3 class="font-semibold">Modération</h3>
+            <i class="fa-solid fa-gavel text-gray-500 group-hover:text-red-600"></i>
+          </div>
+          <p class="text-sm text-gray-600">Commentaires à approuver</p>
+        </a>
+        <a href="#/admin/settings" class="p-4 rounded border hover:shadow group">
+          <div class="flex items-center justify-between">
+            <h3 class="font-semibold">Paramètres</h3>
+            <i class="fa-solid fa-gear text-gray-500 group-hover:text-green-600"></i>
+          </div>
+          <p class="text-sm text-gray-600">Clés API, proxy RSS, etc.</p>
+        </a>
+      </div>
+    </section>
+  </template>
+
+  <template id="tpl-admin-channels">
+    <section class="bg-white p-4 rounded-lg shadow-md">
+      <div class="flex items-center justify-between mb-3">
+        <h2 class="text-xl font-semibold">Gestion des chaînes</h2>
+        <button id="btn-new-channel" class="bg-green-600 text-white px-4 py-2 rounded"><i class="fa fa-plus mr-1"></i>Ajouter</button>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200" id="tbl-channels"></table>
+      </div>
+      <div class="mt-4 p-3 bg-blue-50 border border-blue-200 rounded">
+        <h3 class="font-medium mb-2">Importer via RSS YouTube (expérimental)</h3>
+        <form id="rss-form" class="flex flex-col sm:flex-row gap-2">
+          <input name="channelId" class="flex-1 px-3 py-2 border rounded" placeholder="UCxxxxxxxx (channel_id)" required />
+          <input name="proxy" class="flex-1 px-3 py-2 border rounded" placeholder="Proxy CORS (optionnel)" />
+          <button class="px-4 py-2 bg-blue-600 text-white rounded">Charger le flux</button>
+        </form>
+        <p class="text-xs text-gray-600 mt-2">NB : le flux YouTube est <code>https://www.youtube.com/feeds/videos.xml?channel_id=ID</code>. Certains navigateurs exigent un proxy CORS côté serveur.</p>
+        <div id="rss-output" class="mt-3 text-sm"></div>
+      </div>
+    </section>
+  </template>
+
+  <template id="tpl-admin-suggestions">
+    <section class="bg-white p-4 rounded-lg shadow-md">
+      <h2 class="text-xl font-semibold mb-3">Suggestions d'utilisateurs</h2>
+      <div id="suggest-list" class="space-y-3"></div>
+    </section>
+  </template>
+
+  <template id="tpl-admin-moderation">
+    <section class="bg-white p-4 rounded-lg shadow-md">
+      <h2 class="text-xl font-semibold mb-3">Commentaires en attente</h2>
+      <div id="pending-comments" class="space-y-3"></div>
+    </section>
+  </template>
+
+  <template id="tpl-admin-settings">
+    <section class="max-w-2xl bg-white p-4 rounded-lg shadow-md">
+      <h2 class="text-xl font-semibold mb-3">Paramètres</h2>
+      <form id="settings-form" class="space-y-3">
+        <div>
+          <label class="text-sm text-gray-700">Clé API YouTube (pour serveur)</label>
+          <input name="ytApiKey" class="w-full px-3 py-2 border rounded" placeholder="Stockée côté serveur, ici pour référence" />
+        </div>
+        <div>
+          <label class="text-sm text-gray-700">Proxy CORS pour RSS</label>
+          <input name="corsProxy" class="w-full px-3 py-2 border rounded" placeholder="ex: https://cors.isomorphic-git.org/" />
+        </div>
+        <div>
+          <label class="text-sm text-gray-700">Mode modération des commentaires</label>
+          <select name="commentMode" class="w-full px-3 py-2 border rounded">
+            <option value="pre">Pré-modération (recommandé)</option>
+            <option value="post">Post-modération</option>
+          </select>
+        </div>
+        <button class="px-4 py-2 bg-green-600 text-white rounded">Enregistrer</button>
+      </form>
+    </section>
+  </template>
+
+  <template id="tpl-list">
+    <section class="bg-white p-6 rounded-lg shadow-md">
+      <h1 class="text-2xl font-semibold mb-4 js-title"></h1>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 js-grid"></div>
+    </section>
+  </template>
+
+  <template id="tpl-generic">
+    <section class="bg-white p-8 rounded-lg shadow-md">
+      <h1 class="text-2xl font-bold mb-2 js-title"></h1>
+      <p class="text-gray-700 js-content"></p>
+    </section>
+  </template>
+
+  <script>
+    /* --------------------------- Persistance locale -------------------------- */
+    const store = {
+      get(k, d) { try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch { return d; } },
+      set(k, v) { localStorage.setItem(k, JSON.stringify(v)); },
+    };
+
+    /* --------------------------------- Données -------------------------------- */
+    const initial = {
+      settings: { corsProxy: '', commentMode: 'pre', ytApiKey: '' },
+      session: { userId: null },
+      users: [ { id:'u-admin', name:'Admin', email:'admin@youfiltre.test', password:'admin123', role:'admin', subs:[], playlists:{} } ],
+      channels: [
+        { id: 'education-positive', name: 'Éducation Positive', category: 'Éducation', status: 'approved', youtubeId: 'UCdemo1', rss: '', createdAt: Date.now() },
+        { id: 'science-ethique', name: 'Science Éthique', category: 'Science', status: 'approved', youtubeId: 'UCdemo2', rss: '', createdAt: Date.now() },
+        { id: 'valeurs-societe', name: 'Valeurs & Société', category: 'Société', status: 'approved', youtubeId: 'UCdemo3', rss: '', createdAt: Date.now() },
+      ],
+      suggestions: [],
+      videos: [
+        { id:'v1', title:"L'importance de l'éthique dans les nouvelles technologies", channelId:'science-ethique', channelName:'Science Éthique', views:125000, timeAgo:'il y a 2 jours', likes:120, dislikes:3, subs:'1.2M', desc:'Exploration des impacts éthiques des technologies émergentes.', poster:'https://via.placeholder.com/1280x720.png?text=Video', src:'' },
+        { id:'v2', title:'Histoire inspirante : des jeunes aident leur communauté', channelId:'histoire-inspirante', channelName:'Histoire Inspirante', views:83000, timeAgo:'il y a 5 jours', likes:80, dislikes:2, subs:'842K', desc:'Initiatives solidaires locales.', poster:'https://via.placeholder.com/1280x720.png?text=Histoire', src:'' },
+        { id:'v3', title:'Respect des autres cultures : un guide', channelId:'valeurs-societe', channelName:'Valeurs & Société', views:57000, timeAgo:'il y a 1 semaine', likes:54, dislikes:1, subs:'1.2M', desc:'Comprendre et respecter les différences culturelles.', poster:'https://via.placeholder.com/1280x720.png?text=Valeurs', src:'' },
+        { id:'v4', title:"Méthodes d'éducation positive", channelId:'education-positive', channelName:'Éducation Positive', views:92000, timeAgo:'il y a 3 jours', likes:98, dislikes:1, subs:'654K', desc:'Pratiques concrètes pour une éducation bienveillante.', poster:'https://via.placeholder.com/1280x720.png?text=Education', src:'' },
+      ],
+      comments: { v1:[{ id:'c1', author:'Marie D.', text:"J'ai beaucoup appris !", ago:'il y a 3 jours', status:'approved', likes:42 }], v2:[], v3:[], v4:[] },
+      history: [],
+    };
+
+    const db = store.get('youfiltre', initial);
+    function save() { store.set('youfiltre', db); }
+
+    /* --------------------------------- Helpers -------------------------------- */
+    const $ = (sel, root=document) => root.querySelector(sel);
+    const $$ = (sel, root=document) => Array.from(root.querySelectorAll(sel));
+    const formatViews = n => new Intl.NumberFormat('fr-FR').format(n) + ' vues';
+    function nowYear(){ $('#year').textContent = new Date().getFullYear(); }
+    function uid(p='id'){ return p + '-' + Math.random().toString(36).slice(2,9); }
+
+    function currentUser(){ return db.users.find(u => u.id === db.session.userId) || null; }
+    function requireAdmin(){ const u=currentUser(); return u && u.role==='admin'; }
+
+    function toast(msg){ alert(msg); }
+
+    /* ------------------------------- Sidebar subs ------------------------------ */
+    function renderSidebarSubs(){
+      const u = currentUser();
+      const wrap = $('#sidebar-subs');
+      if(!wrap) return;
+      wrap.innerHTML = '';
+      const subs = (u?.subs||[]).map(id => db.channels.find(c=>c.id===id)).filter(Boolean);
+      if(!subs.length){ wrap.innerHTML = '<div class="px-4 text-sm text-gray-500">Aucun abonnement</div>'; return; }
+      subs.forEach(c => {
+        const a = document.createElement('a');
+        a.href = `#/channel/${c.id}`;
+        a.className = 'flex items-center px-4 py-2 text-gray-800 sidebar-item';
+        a.innerHTML = `<div class="w-6 h-6 bg-gray-200 rounded-full mr-4"></div>${c.name}`;
+        wrap.appendChild(a);
+      });
+    }
+
+    /* --------------------------------- HOME ---------------------------------- */
+    function renderHome(){
+      const app = $('#app');
+      app.innerHTML = $('#tpl-home').innerHTML;
+      const grid = $('#grid-videos');
+      const vids = db.videos.filter(v => db.channels.find(c=>c.id===v.channelId && c.status==='approved'));
+      vids.forEach(v => grid.appendChild(videoCard(v)));
+    }
+
+    function videoCard(v){
+      const card = document.createElement('article');
+      card.className = 'bg-white rounded-lg shadow-md overflow-hidden video-card transition-all';
+      card.innerHTML = `
+        <a href="#/watch/${v.id}" class="block"><div class="video-player-container"><img src="${v.poster}" class="w-full h-full object-cover" alt="miniature"/></div></a>
+        <div class="p-3">
+          <div class="flex">
+            <div class="w-9 h-9 rounded-full bg-gray-300 mr-3"></div>
+            <div>
+              <a href="#/watch/${v.id}" class="font-medium text-gray-900 line-clamp-2 hover:text-blue-600">${v.title}</a>
+              <p class="text-gray-600 text-sm mt-1">${v.channelName}</p>
+              <p class="text-gray-500 text-xs mt-1">${formatViews(v.views)} • ${v.timeAgo}</p>
+            </div>
+          </div>
+          <div class="mt-2 flex justify-between items-center">
+            <span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">Approuvé</span>
+            <button data-sub="${v.channelId}" class="text-xs px-2 py-1 rounded border subscribe-btn">S'abonner</button>
+          </div>
+        </div>`;
+      card.querySelector('.subscribe-btn').addEventListener('click', (e)=>toggleSubscribe(e.target.dataset.sub));
+      return card;
+    }
+
+    function toggleSubscribe(channelId){
+      const u = currentUser();
+      if(!u){ location.hash = '#/login'; return; }
+      const i = u.subs.indexOf(channelId);
+      if(i>-1) u.subs.splice(i,1); else u.subs.push(channelId);
+      save(); renderSidebarSubs(); toast('Abonnements mis à jour');
+    }
+
+    /* -------------------------------- WATCH --------------------------------- */
+    function renderWatch(id){
+      const v = db.videos.find(x=>x.id===id);
+      if(!v) return renderGeneric('Vidéo introuvable', "La vidéo n'existe pas.");
+      const app = $('#app');
+      app.innerHTML = $('#tpl-watch').innerHTML;
+      $('.js-title').textContent = v.title;
+      $('.js-meta').textContent = `${formatViews(v.views)} • ${v.timeAgo}`;
+      $('.js-channel').textContent = v.channelName;
+      $('.js-subs').textContent = `${v.subs} d'abonnés`;
+      $('.js-desc').textContent = v.desc;
+      const video = $('.js-video');
+      if(v.poster) video.setAttribute('poster', v.poster);
+      if(v.src){ const s=document.createElement('source'); s.src=v.src; s.type='video/mp4'; video.appendChild(s); }
+      // Chargement stats officielles : nécessite un backend proxy (exemple commenté)
+      $('.js-yt-views').textContent = 'Statistiques YouTube via backend';
+
+      const likeBtn = $('.js-like'); const dislikeBtn = $('.js-dislike');
+      const likeCount = $('.js-like-count'); const dislikeCount = $('.js-dislike-count');
+      likeCount.textContent = v.likes; dislikeCount.textContent = v.dislikes;
+      likeBtn.addEventListener('click', ()=>{ v.likes++; likeCount.textContent = v.likes; save(); });
+      dislikeBtn.addEventListener('click', ()=>{ v.dislikes++; dislikeCount.textContent = v.dislikes; save(); });
+      $('.js-share').addEventListener('click', async ()=>{ const url=location.href; try{ await navigator.clipboard.writeText(url); toast('Lien copié !'); }catch{ prompt('Copiez ce lien :', url); } });
+      $('.js-subscribe').addEventListener('click', ()=> toggleSubscribe(v.channelId));
+
+      // Historique
+      db.history.unshift({ id:v.id, title:v.title, at:Date.now() });
+      db.history = db.history.slice(0, 100); save();
+
+      // Commentaires
+      const list = $('.js-comments'); const header = $('.js-comments-count');
+      function refresh(){
+        const mode = db.settings.commentMode;
+        const all = db.comments[v.id]||[];
+        const visible = mode==='pre' ? all.filter(c=>c.status==='approved') : all.filter(c=>c.status!=='removed');
+        header.textContent = `${visible.length} commentaire${visible.length>1?'s':''}`;
+        list.innerHTML = visible.map(c => commentItem(c)).join('');
+      }
+      function commentItem(c){
+        return `<div class="flex pb-4 border-b border-gray-100"><div class="w-10 h-10 rounded-full bg-green-300 mr-3"></div><div><div class="flex items-center"><h5 class="font-medium">${c.author}</h5><span class="text-gray-500 text-sm ml-2">${c.ago||''}</span>${c.status!=='approved'?`<span class="ml-2 badge bg-yellow-100 text-yellow-800">${c.status}</span>`:''}</div><p class="text-gray-800 mt-1">${c.text}</p></div></div>`;
+      }
+      refresh();
+      $('#comment-form').addEventListener('submit', (e)=>{
+        e.preventDefault(); const u=currentUser(); if(!u){ location.hash='#/login'; return; }
+        const text = new FormData(e.target).get('comment').toString().trim(); if(!text) return;
+        const c = { id: uid('c'), author: u.name, text, ago: 'à l\'instant', status: db.settings.commentMode==='pre'?'pending':'approved', likes:0 };
+        (db.comments[v.id] ||= []).unshift(c); save(); e.target.reset(); refresh();
+        if(c.status==='pending') toast('Commentaire en attente de modération');
+      });
+
+      // Recommandations
+      const related = $('.js-related');
+      db.videos.filter(x=>x.id!==v.id && x.channelId===v.channelId).concat(db.videos.filter(x=>x.id!==v.id && x.channelId!==v.channelId)).slice(0,6).forEach(x=>{
+        const div = document.createElement('div'); div.className='flex group';
+        div.innerHTML = `<a href="#/watch/${x.id}" class="w-40 h-20 bg-gray-200 rounded-lg mr-2 flex-shrink-0 overflow-hidden block"><img src="${x.poster}" class="w-full h-full object-cover"/></a><div><a href="#/watch/${x.id}" class="text-sm font-medium text-gray-900 line-clamp-2 group-hover:text-blue-600">${x.title}</a><p class="text-xs text-gray-600 mt-1">${x.channelName}</p><p class="text-xs text-gray-500">${formatViews(x.views)} • ${x.timeAgo}</p></div>`;
+        related.appendChild(div);
+      });
+    }
+
+    /* ------------------------------- GENERIC LIST ------------------------------ */
+    function renderList(title, items){
+      const app = $('#app'); app.innerHTML = $('#tpl-list').innerHTML; $('.js-title').textContent = title;
+      const grid = $('.js-grid'); if(!items.length){ grid.innerHTML = '<p class="text-gray-500">Aucun élément</p>'; return; }
+      items.forEach(v => grid.appendChild(videoCard(v)));
+    }
+
+    /* -------------------------------- PAGES DIVERS --------------------------- */
+    function renderGeneric(title, content){ const app=$('#app'); app.innerHTML=$('#tpl-generic').innerHTML; $('.js-title').textContent=title; $('.js-content').textContent=content; }
+
+    function renderSubscriptions(){ const u=currentUser(); if(!u){ location.hash='#/login'; return; } const vids=db.videos.filter(v=>u.subs.includes(v.channelId)); renderList('Vos abonnements', vids); }
+    function renderHistory(){ const vids=db.history.map(h=>db.videos.find(v=>v.id===h.id)).filter(Boolean); renderList('Historique', vids); }
+    function renderPlaylists(){ const u=currentUser(); if(!u){ location.hash='#/login'; return; } renderGeneric('Playlists', 'Fonctionnalité démo — structure prête.'); }
+
+    /* --------------------------------- SEARCH -------------------------------- */
+    $('#search-form').addEventListener('submit', (e)=>{
+      e.preventDefault(); const q=$('#search-input').value.toLowerCase().trim();
+      const results = db.videos.filter(v=> v.title.toLowerCase().includes(q) || v.channelName.toLowerCase().includes(q) );
+      renderList(`Résultats pour "${q}"`, results); if(!results.length) renderGeneric('Aucun résultat', `Aucune vidéo trouvée pour "${q}".`);
+    });
+
+    /* --------------------------------- AUTH ---------------------------------- */
+    function renderLogin(){ const app=$('#app'); app.innerHTML=$('#tpl-auth').innerHTML; $('#login-form').addEventListener('submit', (e)=>{ e.preventDefault(); const fd=new FormData(e.target); const email=fd.get('email'); const pwd=fd.get('password'); const u=db.users.find(u=>u.email===email && u.password===pwd); if(!u){ toast('Identifiants invalides'); return; } db.session.userId=u.id; save(); renderSidebarSubs(); location.hash = u.role==='admin' ? '#/admin' : '#/home'; }); }
+    function renderSignup(){ const app=$('#app'); app.innerHTML=$('#tpl-signup').innerHTML; $('#signup-form').addEventListener('submit', (e)=>{ e.preventDefault(); const fd=new FormData(e.target); const user={ id:uid('u'), name:fd.get('name'), email:fd.get('email'), password:fd.get('password'), role:'user', subs:[], playlists:{} }; db.users.push(user); db.session.userId=user.id; save(); renderSidebarSubs(); location.hash='#/home'; }); }
+
+    /* -------------------------------- ADMIN ROOT ----------------------------- */
+    function renderAdmin(){ if(!requireAdmin()){ location.hash='#/login'; return; } const app=$('#app'); app.innerHTML=$('#tpl-admin').innerHTML; $('.js-admin-name').textContent = currentUser().name; $('#admin-logout').addEventListener('click', ()=>{ db.session.userId=null; save(); location.hash='#/home'; }); }
+
+    function renderAdminChannels(){ if(!requireAdmin()){ location.hash='#/login'; return; } const app=$('#app'); app.innerHTML=$('#tpl-admin-channels').innerHTML; const tbl=$('#tbl-channels');
+      function paint(){ tbl.innerHTML = `
+        <thead class="bg-gray-50"><tr><th class="px-4 py-2 text-left">Chaîne</th><th class="px-4 py-2">Catégorie</th><th class="px-4 py-2">Statut</th><th class="px-4 py-2">Actions</th></tr></thead>
+        <tbody class="divide-y">${db.channels.map(c=>`
+          <tr>
+            <td class="px-4 py-2 text-left"><div class="font-medium">${c.name}</div><div class="text-xs text-gray-500">${c.id}</div></td>
+            <td class="px-4 py-2 text-center">${c.category||'-'}</td>
+            <td class="px-4 py-2 text-center">
+              <span class="badge ${c.status==='approved'?'bg-green-100 text-green-800':c.status==='pending'?'bg-yellow-100 text-yellow-800':'bg-red-100 text-red-800'}">${c.status}</span>
+            </td>
+            <td class="px-4 py-2 text-center space-x-2">
+              <button data-act="approve" data-id="${c.id}" class="px-2 py-1 rounded bg-green-600 text-white text-xs">Approuver</button>
+              <button data-act="pend" data-id="${c.id}" class="px-2 py-1 rounded bg-yellow-600 text-white text-xs">En attente</button>
+              <button data-act="reject" data-id="${c.id}" class="px-2 py-1 rounded bg-red-600 text-white text-xs">Refuser</button>
+              <button data-act="edit" data-id="${c.id}" class="px-2 py-1 rounded bg-blue-600 text-white text-xs">Éditer</button>
+              <button data-act="remove" data-id="${c.id}" class="px-2 py-1 rounded bg-gray-200 text-xs">Supprimer</button>
+            </td>
+          </tr>`).join('')}</tbody>`; }
+      paint();
+
+      tbl.addEventListener('click', (e)=>{
+        const b=e.target.closest('button'); if(!b) return; const id=b.dataset.id; const c=db.channels.find(x=>x.id===id); if(!c) return;
+        if(b.dataset.act==='approve') c.status='approved';
+        if(b.dataset.act==='pend') c.status='pending';
+        if(b.dataset.act==='reject') c.status='rejected';
+        if(b.dataset.act==='remove') { const i=db.channels.findIndex(x=>x.id===id); if(i>-1) db.channels.splice(i,1); }
+        if(b.dataset.act==='edit') openEdit(c);
+        save(); paint();
+      });
+
+      function openEdit(c){
+        const name = prompt('Nom de la chaîne', c.name); if(!name) return;
+        const category = prompt('Catégorie', c.category||'');
+        const youtubeId = prompt('YouTube channel_id (UC....)', c.youtubeId||'');
+        const rss = prompt('URL RSS YouTube', c.rss||'');
+        Object.assign(c,{name,category,youtubeId,rss}); save(); paint();
+      }
+
+      $('#btn-new-channel').addEventListener('click', ()=>{
+        const id = prompt('Identifiant (slug) ex: science-ethique'); if(!id) return;
+        const name = prompt('Nom de la chaîne'); if(!name) return;
+        db.channels.push({ id, name, status:'pending', category:'', youtubeId:'', rss:'', createdAt:Date.now() }); save(); paint();
+      });
+
+      // RSS loader
+      $('#rss-form').addEventListener('submit', async (e)=>{
+        e.preventDefault(); const fd=new FormData(e.target); const channelId=fd.get('channelId'); let proxy=fd.get('proxy')||db.settings.corsProxy||''; const out=$('#rss-output'); out.textContent='Chargement du flux...';
+        const url = `https://www.youtube.com/feeds/videos.xml?channel_id=${encodeURIComponent(channelId)}`;
+        try{
+          const final = proxy ? proxy.replace(/\/$/,'') + '/' + url : url;
+          const res = await fetch(final); if(!res.ok) throw new Error('HTTP ' + res.status);
+          const xml = await res.text();
+          const parser=new DOMParser(); const doc=parser.parseFromString(xml,'text/xml');
+          const entries=[...doc.querySelectorAll('entry')].slice(0,5).map(e=>({
+            id: e.querySelector('yt\:videoId')?.textContent,
+            title: e.querySelector('title')?.textContent,
+            published: e.querySelector('published')?.textContent,
+            link: e.querySelector('link')?.getAttribute('href')
+          }));
+          out.innerHTML = entries.map(x=>`<div class="text-sm">✔ ${x.title} <span class="text-gray-500">(${x.id})</span></div>`).join('') || 'Aucune vidéo.';
+        }catch(err){ out.innerHTML = `<span class="text-red-700">Échec RSS (CORS probable). Configurez un proxy côté serveur.</span>`; }
+      });
+    }
+
+    function renderAdminSuggestions(){ if(!requireAdmin()){ location.hash='#/login'; return; } const app=$('#app'); app.innerHTML=$('#tpl-admin-suggestions').innerHTML; const wrap=$('#suggest-list');
+      if(!db.suggestions.length){ wrap.innerHTML='<p class="text-gray-500">Aucune suggestion</p>'; return; }
+      wrap.innerHTML = db.suggestions.map(s=>`
+        <div class="p-3 border rounded flex items-start justify-between">
+          <div>
+            <div class="font-medium">${s.name}</div>
+            <div class="text-xs text-gray-500">${s.url} — par ${s.by||'invité'}</div>
+            <div class="text-sm mt-1">${s.reason}</div>
+          </div>
+          <div class="flex gap-2">
+            <button data-act="approve" data-id="${s.id}" class="px-3 py-1 bg-green-600 text-white rounded text-sm">Approuver</button>
+            <button data-act="reject" data-id="${s.id}" class="px-3 py-1 bg-red-600 text-white rounded text-sm">Rejeter</button>
+          </div>
+        </div>`).join('');
+      wrap.addEventListener('click', (e)=>{ const b=e.target.closest('button'); if(!b) return; const id=b.dataset.id; const i=db.suggestions.findIndex(x=>x.id===id); if(i<0) return; const s=db.suggestions[i]; if(b.dataset.act==='approve'){ db.channels.push({ id: s.url.replace(/[^a-z0-9-]/gi,'-').toLowerCase().slice(0,30)||uid('ch'), name:s.name, category:'', status:'approved', youtubeId:'', rss:'', createdAt:Date.now() }); } db.suggestions.splice(i,1); save(); renderAdminSuggestions(); });
+    }
+
+    function renderAdminModeration(){ if(!requireAdmin()){ location.hash='#/login'; return; } const app=$('#app'); app.innerHTML=$('#tpl-admin-moderation').innerHTML; const wrap=$('#pending-comments');
+      const pendingEntries = Object.entries(db.comments).flatMap(([vid, arr])=> arr.filter(c=>c.status==='pending').map(c=>({vid, c})) );
+      if(!pendingEntries.length){ wrap.innerHTML='<p class="text-gray-500">Aucun commentaire en attente</p>'; return; }
+      wrap.innerHTML = pendingEntries.map(({vid,c})=>{
+        const v=db.videos.find(x=>x.id===vid); return `<div class="p-3 border rounded"><div class="text-xs text-gray-500 mb-1">Vidéo : ${v?.title||vid}</div><div class="font-medium">${c.author}</div><div class="text-sm">${c.text}</div><div class="mt-2 space-x-2"><button data-act="approve" data-vid="${vid}" data-id="${c.id}" class="px-3 py-1 bg-green-600 text-white rounded text-sm">Approuver</button><button data-act="remove" data-vid="${vid}" data-id="${c.id}" class="px-3 py-1 bg-red-600 text-white rounded text-sm">Supprimer</button></div></div>`; }).join('');
+      wrap.addEventListener('click', (e)=>{ const b=e.target.closest('button'); if(!b) return; const {act, vid, id} = b.dataset; const arr=db.comments[vid]||[]; const c=arr.find(x=>x.id===id); if(!c) return; if(act==='approve') c.status='approved'; if(act==='remove') c.status='removed'; save(); renderAdminModeration(); });
+    }
+
+    function renderAdminSettings(){ if(!requireAdmin()){ location.hash='#/login'; return; } const app=$('#app'); app.innerHTML=$('#tpl-admin-settings').innerHTML; const f=$('#settings-form'); f.ytApiKey.value=db.settings.ytApiKey||''; f.corsProxy.value=db.settings.corsProxy||''; f.commentMode.value=db.settings.commentMode||'pre'; f.addEventListener('submit', (e)=>{ e.preventDefault(); const fd=new FormData(f); db.settings.ytApiKey=fd.get('ytApiKey'); db.settings.corsProxy=fd.get('corsProxy'); db.settings.commentMode=fd.get('commentMode'); save(); toast('Paramètres enregistrés'); }); }
+
+    /* -------------------------------- SUGGEST -------------------------------- */
+    function renderSuggest(){ const app=$('#app'); app.innerHTML=$('#tpl-suggest').innerHTML; $('#suggest-form').addEventListener('submit', (e)=>{ e.preventDefault(); const fd=new FormData(e.target); db.suggestions.push({ id:uid('s'), name:fd.get('name'), url:fd.get('url'), reason:fd.get('reason'), by:currentUser()?.name||'invité', createdAt:Date.now() }); save(); toast('Suggestion envoyée !'); location.hash='#/home'; }); }
+
+    /* -------------------------------- ROUTER -------------------------------- */
+    const routes = {
+      '#/home': renderHome,
+      '#/trending': ()=> renderList('Tendances', [...db.videos].sort((a,b)=>b.views-a.views)),
+      '#/subscriptions': renderSubscriptions,
+      '#/approved': ()=> renderGeneric('Chaînes approuvées', 'Toutes les vidéos sont limitées aux chaînes approuvées par la modération.'),
+      '#/history': renderHistory,
+      '#/playlists': renderPlaylists,
+      '#/settings': ()=> renderGeneric('Paramètres', 'Personnalisez votre expérience (à venir).'),
+      '#/help': ()=> renderGeneric('Aide', 'FAQ, support et ressources.'),
+      '#/report': ()=> renderGeneric('Signaler', 'Décrivez le contenu à signaler.'),
+      '#/about': ()=> renderGeneric('À propos', 'YouFiltre : vision et équipe.'),
+      '#/privacy': ()=> renderGeneric('Confidentialité', 'Politique de confidentialité.'),
+      '#/terms': ()=> renderGeneric('Conditions', 'Conditions de service.'),
+      '#/contact': ()=> renderGeneric('Contact', 'contact@youfiltre.example'),
+      '#/login': renderLogin,
+      '#/signup': renderSignup,
+      '#/suggest': renderSuggest,
+      '#/admin': renderAdmin,
+      '#/admin/channels': renderAdminChannels,
+      '#/admin/suggestions': renderAdminSuggestions,
+      '#/admin/moderation': renderAdminModeration,
+      '#/admin/settings': renderAdminSettings,
+    };
+
+    function navigate(){
+      const hash = location.hash || '#/home';
+      if(hash.startsWith('#/watch/')){ const id = hash.split('/')[2]; renderWatch(id); window.scrollTo({top:0,behavior:'smooth'}); return; }
+      if(hash.startsWith('#/channel/')){ const id = hash.split('/')[2]; const vids=db.videos.filter(v=>v.channelId===id); const name = db.channels.find(c=>c.id===id)?.name||id; renderList('Chaîne — ' + name, vids); window.scrollTo({top:0,behavior:'smooth'}); return; }
+      (routes[hash]||renderHome)(); window.scrollTo({top:0,behavior:'smooth'});
+    }
+
+    window.addEventListener('hashchange', navigate);
+
+    /* ---------------------------- Mobile Sidebar ---------------------------- */
+    const desktopAsideHTML = document.querySelector('aside').innerHTML; $('#mobile-sidebar-content').innerHTML = desktopAsideHTML;
+    function toggleMobileSidebar(open){ const overlay=$('#mobile-sidebar'); const panel=$('#mobile-sidebar-content'); if(open){ overlay.classList.remove('hidden'); panel.style.transform='translateX(0)'; $('#mobile-sidebar-toggle').setAttribute('aria-expanded','true'); } else { overlay.classList.add('hidden'); panel.style.transform='translateX(-100%)'; $('#mobile-sidebar-toggle').setAttribute('aria-expanded','false'); } }
+    $('#mobile-sidebar-toggle').addEventListener('click', ()=>toggleMobileSidebar(true));
+    $('#mobile-sidebar').addEventListener('click', (e)=>{ if(e.target.id==='mobile-sidebar') toggleMobileSidebar(false); });
+    $('#mobile-sidebar-content').addEventListener('click', (e)=>{ if(e.target.tagName==='A') toggleMobileSidebar(false); });
+
+    /* --------------------------------- Init ---------------------------------- */
+    nowYear(); renderSidebarSubs(); navigate();
+  </script>
+</body>
+</html>
+// YouFiltre — Backend Express (Node.js)
+// ------------------------------------------------------------
+// Features: Auth (JWT) demo, Channels CRUD + statuses, Suggestions,
+// Comments (pre/post moderation), Playlists, Subscriptions, History,
+// YouTube Data API proxy (stats/search limited to approved channels),
+// RSS proxy for channel feeds, Rate limiting, CORS, Validation.
+//
+// Stack: Node 18+, Express, MongoDB (Mongoose), jsonwebtoken, bcrypt,
+//         zod (validation), axios, helmet, cors, express-rate-limit.
+//
+// How to run:
+// 1) npm init -y && npm i express mongoose dotenv zod jsonwebtoken bcrypt axios helmet cors express-rate-limit morgan
+// 2) Create .env (see template below)
+// 3) node server.js
+// ------------------------------------------------------------
+
+/*
+.env example
+------------
+PORT=8080
+MONGO_URI=mongodb://localhost:27017/youfiltre
+JWT_SECRET=supersecret_change_me
+YOUTUBE_API_KEY=YOUR_YOUTUBE_DATA_API_KEY
+# Optional: allow CORS from your local file / dev host
+CORS_ORIGIN=http://localhost:5173,http://127.0.0.1:5500
+*/
+
+// server.js
+import express from 'express'
+import mongoose from 'mongoose'
+import dotenv from 'dotenv'
+import cors from 'cors'
+import helmet from 'helmet'
+import morgan from 'morgan'
+import rateLimit from 'express-rate-limit'
+import axios from 'axios'
+import bcrypt from 'bcrypt'
+import jwt from 'jsonwebtoken'
+import { z } from 'zod'
+
+dotenv.config()
+
+// -------------------------- App & Security ---------------------------
+const app = express()
+app.use(express.json({ limit: '1mb' }))
+app.use(helmet())
+app.use(morgan('dev'))
+
+// CORS
+const origins = (process.env.CORS_ORIGIN || '').split(',').filter(Boolean)
+app.use(cors({ origin: (origin, cb) => {
+  if (!origin || origins.length === 0 || origins.includes(origin)) return cb(null, true)
+  return cb(new Error('Not allowed by CORS'))
+}, credentials: true }))
+
+// Basic rate limit (adjust per route if needed)
+const apiLimiter = rateLimit({ windowMs: 60_000, max: 120 })
+app.use('/api/', apiLimiter)
+
+// ----------------------------- DB Setup ------------------------------
+const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/youfiltre'
+await mongoose.connect(MONGO_URI)
+
+// ---------------------------- Schemas -------------------------------
+const UserSchema = new mongoose.Schema({
+  name: String,
+  email: { type: String, unique: true },
+  passwordHash: String,
+  role: { type: String, enum: ['user', 'admin'], default: 'user' },
+  subs: [String], // channel ids
+  playlists: { type: Map, of: [String], default: {} }, // name -> [videoIds]
+  createdAt: { type: Date, default: Date.now },
+})
+
+const ChannelSchema = new mongoose.Schema({
+  id: { type: String, unique: true }, // slug
+  name: String,
+  category: String,
+  status: { type: String, enum: ['approved', 'pending', 'rejected'], default: 'pending' },
+  youtubeId: String, // UCxxxx
+  rss: String,
+  createdAt: { type: Date, default: Date.now },
+})
+
+const SuggestionSchema = new mongoose.Schema({
+  name: String,
+  url: String,
+  reason: String,
+  byUserId: { type: String, default: null },
+  status: { type: String, enum: ['pending', 'approved', 'rejected'], default: 'pending' },
+  createdAt: { type: Date, default: Date.now },
+})
+
+const VideoSchema = new mongoose.Schema({
+  // Optional local cache of videos fetched from YT (per channel)
+  videoId: { type: String, index: true },
+  channelId: String, // our internal channel slug
+  title: String,
+  poster: String,
+  desc: String,
+  views: Number,
+  likes: Number,
+  publishedAt: Date,
+  createdAt: { type: Date, default: Date.now },
+})
+
+const CommentSchema = new mongoose.Schema({
+  videoId: String,
+  userId: String,
+  authorName: String,
+  text: String,
+  status: { type: String, enum: ['pending', 'approved', 'removed'], default: 'pending' },
+  likes: { type: Number, default: 0 },
+  createdAt: { type: Date, default: Date.now },
+})
+
+const User = mongoose.model('User', UserSchema)
+const Channel = mongoose.model('Channel', ChannelSchema)
+const Suggestion = mongoose.model('Suggestion', SuggestionSchema)
+const Video = mongoose.model('Video', VideoSchema)
+const Comment = mongoose.model('Comment', CommentSchema)
+
+// ------------------------- Util / Middleware -------------------------
+const JWT_SECRET = process.env.JWT_SECRET || 'dev'
+function sign(user) { return jwt.sign({ sub: user._id, role: user.role, name: user.name }, JWT_SECRET, { expiresIn: '7d' }) }
+function auth(req, res, next) {
+  const h = req.headers.authorization || ''
+  const t = h.startsWith('Bearer ') ? h.slice(7) : null
+  if (!t) return res.status(401).json({ error: 'Unauthorized' })
+  try { req.user = jwt.verify(t, JWT_SECRET); next() } catch { return res.status(401).json({ error: 'Invalid token' }) }
+}
+function admin(req, res, next) { if (req.user?.role === 'admin') return next(); return res.status(403).json({ error: 'Forbidden' }) }
+
+function ok(res, data) { return res.json({ ok: true, data }) }
+function bad(res, msg) { return res.status(400).json({ ok: false, error: msg }) }
+
+// -------------------------- Validators (zod) -------------------------
+const zSignup = z.object({ name: z.string().min(2), email: z.string().email(), password: z.string().min(6) })
+const zLogin = z.object({ email: z.string().email(), password: z.string().min(6) })
+const zSuggest = z.object({ name: z.string().min(2), url: z.string().min(5), reason: z.string().min(10) })
+const zChannel = z.object({ id: z.string().min(2), name: z.string().min(2), category: z.string().optional(), youtubeId: z.string().optional(), rss: z.string().optional(), status: z.enum(['approved','pending','rejected']).optional() })
+const zComment = z.object({ videoId: z.string(), text: z.string().min(1) })
+
+// ------------------------------ Seed Admin ---------------------------
+// Creates an admin if none exists
+const adminEmail = 'admin@youfiltre.test'
+if (!(await User.findOne({ email: adminEmail }))) {
+  const passwordHash = await bcrypt.hash('admin123', 10)
+  await User.create({ name: 'Admin', email: adminEmail, passwordHash, role: 'admin', subs: [] })
+  console.log('Seeded admin: admin@youfiltre.test / admin123')
+}
+
+// ------------------------------ Auth API -----------------------------
+app.post('/api/auth/signup', async (req, res) => {
+  const p = zSignup.safeParse(req.body)
+  if (!p.success) return bad(res, p.error.issues[0].message)
+  const { name, email, password } = p.data
+  if (await User.findOne({ email })) return bad(res, 'Email déjà utilisé')
+  const passwordHash = await bcrypt.hash(password, 10)
+  const u = await User.create({ name, email, passwordHash, role: 'user', subs: [] })
+  return ok(res, { token: sign(u), user: { id: u._id, name: u.name, role: u.role } })
+})
+
+app.post('/api/auth/login', async (req, res) => {
+  const p = zLogin.safeParse(req.body)
+  if (!p.success) return bad(res, p.error.issues[0].message)
+  const { email, password } = p.data
+  const u = await User.findOne({ email })
+  if (!u) return bad(res, 'Identifiants invalides')
+  const okPwd = await bcrypt.compare(password, u.passwordHash)
+  if (!okPwd) return bad(res, 'Identifiants invalides')
+  return ok(res, { token: sign(u), user: { id: u._id, name: u.name, role: u.role } })
+})
+
+app.get('/api/me', auth, async (req, res) => {
+  const u = await User.findById(req.user.sub).lean()
+  ok(res, { id: u._id, name: u.name, role: u.role, subs: u.subs })
+})
+
+// ----------------------------- Channels API --------------------------
+app.get('/api/channels', async (_req, res) => {
+  const rows = await Channel.find().sort({ createdAt: -1 }).lean()
+  ok(res, rows)
+})
+
+app.post('/api/channels', auth, admin, async (req, res) => {
+  const p = zChannel.safeParse(req.body)
+  if (!p.success) return bad(res, p.error.issues[0].message)
+  const exists = await Channel.findOne({ id: p.data.id })
+  if (exists) return bad(res, 'Identifiant de chaîne déjà existant')
+  const row = await Channel.create({ ...p.data })
+  ok(res, row)
+})
+
+app.patch('/api/channels/:id', auth, admin, async (req, res) => {
+  const allowed = zChannel.partial()
+  const p = allowed.safeParse(req.body)
+  if (!p.success) return bad(res, p.error.issues[0].message)
+  const row = await Channel.findOneAndUpdate({ id: req.params.id }, p.data, { new: true })
+  ok(res, row)
+})
+
+app.delete('/api/channels/:id', auth, admin, async (req, res) => {
+  await Channel.deleteOne({ id: req.params.id })
+  ok(res, true)
+})
+
+// ---------------------------- Suggestions API ------------------------
+app.get('/api/suggestions', auth, admin, async (_req, res) => {
+  const rows = await Suggestion.find().sort({ createdAt: -1 }).lean()
+  ok(res, rows)
+})
+
+app.post('/api/suggestions', auth, async (req, res) => {
+  const p = zSuggest.safeParse(req.body)
+  if (!p.success) return bad(res, p.error.issues[0].message)
+  const s = await Suggestion.create({ ...p.data, byUserId: req.user.sub })
+  ok(res, s)
+})
+
+app.post('/api/suggestions/:id/approve', auth, admin, async (req, res) => {
+  const s = await Suggestion.findById(req.params.id)
+  if (!s) return bad(res, 'Suggestion introuvable')
+  s.status = 'approved'; await s.save()
+  // try to infer channel id/slug
+  const slug = (s.url || s.name).toLowerCase().replace(/[^a-z0-9-]/g, '-').slice(0, 40)
+  const exists = await Channel.findOne({ id: slug })
+  if (!exists) await Channel.create({ id: slug || `ch-${Date.now()}`, name: s.name, status: 'approved' })
+  ok(res, true)
+})
+
+app.post('/api/suggestions/:id/reject', auth, admin, async (req, res) => {
+  const s = await Suggestion.findById(req.params.id)
+  if (!s) return bad(res, 'Suggestion introuvable')
+  s.status = 'rejected'; await s.save(); ok(res, true)
+})
+
+// ------------------------------ Comments API -------------------------
+app.get('/api/comments/:videoId', async (req, res) => {
+  const mode = (await Setting.get())?.commentMode || 'pre'
+  const filter = mode === 'pre' ? { status: 'approved' } : { status: { $ne: 'removed' } }
+  const rows = await Comment.find({ videoId: req.params.videoId, ...filter }).sort({ createdAt: -1 }).lean()
+  ok(res, rows)
+})
+
+app.post('/api/comments', auth, async (req, res) => {
+  const p = zComment.safeParse(req.body)
+  if (!p.success) return bad(res, p.error.issues[0].message)
+  const mode = (await Setting.get())?.commentMode || 'pre'
+  const c = await Comment.create({
+    videoId: p.data.videoId,
+    userId: req.user.sub,
+    authorName: req.user.name,
+    text: p.data.text,
+    status: mode === 'pre' ? 'pending' : 'approved'
+  })
+  ok(res, c)
+})
+
+app.post('/api/comments/:id/approve', auth, admin, async (req, res) => {
+  const c = await Comment.findById(req.params.id)
+  if (!c) return bad(res, 'Commentaire introuvable')
+  c.status = 'approved'; await c.save(); ok(res, true)
+})
+
+app.post('/api/comments/:id/remove', auth, admin, async (req, res) => {
+  const c = await Comment.findById(req.params.id)
+  if (!c) return bad(res, 'Commentaire introuvable')
+  c.status = 'removed'; await c.save(); ok(res, true)
+})
+
+// ------------------------------- Settings ----------------------------
+// Simple singleton settings storage
+const SettingSchema = new mongoose.Schema({
+  _id: { type: String, default: 'settings' },
+  commentMode: { type: String, enum: ['pre', 'post'], default: 'pre' },
+  corsProxy: String,
+})
+const SettingModel = mongoose.model('Setting', SettingSchema)
+const Setting = {
+  async get() { return (await SettingModel.findById('settings')) || (await SettingModel.create({ _id: 'settings' })) },
+  async set(patch) { const cur = await Setting.get(); Object.assign(cur, patch); await cur.save(); return cur },
+}
+
+app.get('/api/admin/settings', auth, admin, async (_req, res) => ok(res, await Setting.get()))
+app.post('/api/admin/settings', auth, admin, async (req, res) => ok(res, await Setting.set(req.body || {})))
+
+// -------------------------- YouTube API Proxy ------------------------
+const YT = axios.create({ baseURL: 'https://www.googleapis.com/youtube/v3' })
+function ensureKey() { if (!process.env.YOUTUBE_API_KEY) throw new Error('YOUTUBE_API_KEY manquant') }
+
+// Search videos but restricted to approved channels
+app.get('/api/youtube/search', async (req, res) => {
+  try {
+    ensureKey()
+    const q = (req.query.q || '').toString()
+    const approved = await Channel.find({ status: 'approved', youtubeId: { $ne: null } }).lean()
+    const channelIds = approved.map(c => c.youtubeId).filter(Boolean)
+    if (!channelIds.length) return ok(res, [])
+    // We perform multiple requests per channel and merge (simple demo). For prod: build your own indexed cache.
+    const maxResults = 5
+    const calls = channelIds.slice(0, 5).map(id => YT.get('/search', {
+      params: { key: process.env.YOUTUBE_API_KEY, part: 'snippet', channelId: id, q, maxResults, order: 'date', type: 'video' }
+    }))
+    const results = (await Promise.allSettled(calls)).flatMap(r => r.status === 'fulfilled' ? r.value.data.items : [])
+    ok(res, results)
+  } catch (e) { bad(res, e.message) }
+})
+
+// Get official stats for a list of videoIds
+a pp.get('/api/youtube/stats', async (req, res) => {
+  try {
+    ensureKey()
+    const ids = (req.query.ids || '').toString()
+    if (!ids) return ok(res, [])
+    const r = await YT.get('/videos', { params: { key: process.env.YOUTUBE_API_KEY, part: 'statistics,snippet', id: ids } })
+    ok(res, r.data.items)
+  } catch (e) { bad(res, e.message) }
+})
+
+// ------------------------------- RSS Proxy ---------------------------
+// Useful when front-end cannot fetch XML due to CORS. Cache-control kept simple.
+app.get('/api/rss/channel/:channelId', async (req, res) => {
+  try {
+    const url = `https://www.youtube.com/feeds/videos.xml?channel_id=${encodeURIComponent(req.params.channelId)}`
+    const r = await axios.get(url, { responseType: 'text' })
+    res.set('Content-Type', 'application/xml; charset=utf-8')
+    res.set('Cache-Control', 'public, max-age=300')
+    res.send(r.data)
+  } catch (e) { res.status(502).send('<error>Failed to fetch RSS</error>') }
+})
+
+// ---------------------------- Subscriptions --------------------------
+app.post('/api/subs/:channelId/toggle', auth, async (req, res) => {
+  const u = await User.findById(req.user.sub)
+  const i = u.subs.indexOf(req.params.channelId)
+  if (i > -1) u.subs.splice(i, 1); else u.subs.push(req.params.channelId)
+  await u.save(); ok(res, u.subs)
+})
+
+// ------------------------------ Boot ---------------------------------
+const PORT = process.env.PORT || 8080
+app.get('/api/health', (_req, res) => res.json({ ok: true }))
+app.listen(PORT, () => console.log('YouFiltre API running on :' + PORT))
